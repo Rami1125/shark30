@@ -1,6 +1,41 @@
 // == Configuration ==
-const API_BASE = 'https://script.google.com/macros/s/AKfycbyn_XlZa0_FY95TlrdHYc4CLFOVWbdI0hhi6Qv6OviHI7_Oa9-DETzz9jjUc_AXYmysmw/exec'; // PUT your GAS webapp URL here
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyn_XlZa0_FY95TlrdHYc4CLFOVWbdI0hhi6Qv6OviHI7_Oa9-DETzz9jjUc_AXYmysmw/exec'; // Your GAS Web App URL
 let showClosed = false;
+
+const tBody = document.querySelector('#ordersTable tbody');
+const alerts = document.getElementById('alerts');
+
+// Fetch orders from API
+async function fetchOrders(){
+  try {
+    const res = await fetch(API_BASE + '?action=list&show='+(showClosed?'all':'open'));
+    const data = await res.json();
+    renderTable(data.data || []);
+  } catch(err){
+    console.error(err);
+    showAlert('שגיאה', 'לא ניתן לשלוף הזמנות');
+  }
+}
+
+function renderTable(data){
+  tBody.innerHTML = '';
+  data.forEach(order => {
+    const tr = document.createElement('tr');
+    for (let key in order) {
+      const td = document.createElement('td');
+      td.textContent = order[key] !== undefined ? order[key] : '';
+      tr.appendChild(td);
+    }
+    tBody.appendChild(tr);
+  });
+}
+
+function showAlert(title, msg){
+  console.log(title, msg);
+}
+
+// Init
+fetchOrders();
 
 // Mock for quick demo (will be replaced by fetchOrders)
 const mockOrders = [
