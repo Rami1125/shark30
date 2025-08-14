@@ -792,7 +792,7 @@
         function hideLoader() { document.getElementById('loader-overlay').classList.add('hidden'); }
 
         /**
-         * מציג הודעת Pop-up للمשתמש.
+         * מציג הודעת Pop-up למשתמש.
          * @param {string} message ההודעה להצגה.
          * @param {'success'|'error'|'warning'|'info'} type סוג ההודעה (משפיע על צבע).
          */
@@ -1617,49 +1617,77 @@
             inventoryTableBody.innerHTML = '';
             noContainersMsg.classList.add('hidden');
 
-            const containerStates = {}; // {containerNum: {status: 'inUse'/'available', lastOrder: {orderObject}}}
+            // Map to store the latest state for each container.
+            // Keys: container number. Values: { status, relatedOrderDocId, relatedCustomer, latestEventDate }
+            const containerStates = {};
 
-            // מיון הזמנות לפי תאריך הזמנה (מהישן לחדש) ותעודה (כדי לטפל במקרים של אותו יום)
+            // Sort orders by 'תאריך הזמנה' (ascending) to process events chronologically.
+            // For same dates, use 'תעודה' as a tie-breaker for consistent results.
             const sortedOrders = [...allOrders].sort((a, b) => {
                 const dateA = new Date(a['תאריך הזמנה']);
                 const dateB = new Date(b['תאריך הזמנה']);
+
                 if (dateA.getTime() !== dateB.getTime()) {
                     return dateA - dateB;
                 }
-                return (a['תעודה'] || '').localeCompare(b['תעודה'] || ''); // סדר אלפביתי לפי תעודה כשובר שוויון
+                return (a['תעודה'] || '').localeCompare(b['תעודה'] || '');
             });
 
             sortedOrders.forEach(order => {
                 const containers = (order['מספרי מכולות'] || '').toString().split(',').map(c => c.trim()).filter(c => c);
+                const orderDate = new Date(order['תאריך הזמנה']);
 
                 containers.forEach(container => {
-                    if (order['סוג פעולה'] === 'הורדה') {
-                        if (order['סטטוס'] === 'סגור' && order['תאריך סגירה']) {
-                            // אם ההורדה נסגרה עם תאריך סגירה, נניח שהמכולה חזרה, אלא אם יש פעולת העלאה מאוחרת יותר.
-                            // בגישה זו, אנו נסמוך על ההעלאה כאינדיקטור לחזרה למלאי.
-                            // אז אם היא 'הורדה' ו'סגור', היא לא נחשבת בשימוש כרגע.
-                            // נמשיך לבדוק אם יש 'העלאה' עבורה.
-                        } else {
-                            // הורדה פתוחה או חורגת -> בשימוש
-                            containerStates[container] = { status: 'בשימוש', order: order };
+                    // Get current state for this container, or initialize it
+                    const currentState = containerStates[container] || {
+                        status: 'לא ידוע',
+                        relatedOrderDocId: '',
+                        relatedCustomer: '',
+                        latestEventDate: null
+                    };
+
+                    // Only update the state if this order is chronologically later than the last recorded event
+                    if (!currentState.latestEventDate || orderDate.getTime() >= currentState.latestEventDate.getTime()) {
+                        currentState.latestEventDate = orderDate; // Update the latest event date
+
+                        if (order['סוג פעולה'] === 'הורדה') {
+                            if (order['סטטוס'] === 'סגור') {
+                                // A closed "הורדה" order means this specific rental is finished.
+                                // The container should now be considered available unless a later active "הורדה" exists.
+                                // Since we process chronologically, if this is the latest for this container, it's available.
+                                currentState.status = 'פנוי';
+                            } else {
+                                // An open or overdue "הורדה" order means the container is currently in use.
+                                currentState.status = 'בשימוש';
+                            }
+                        } else if (order['סוג פעולה'] === 'העלאה') {
+                            if (order['סטטוס'] === 'סגור') {
+                                // A closed "העלאה" definitively means the container has returned and is available.
+                                currentState.status = 'פנוי';
+                            } else {
+                                // An open or overdue "העלאה" order means the container is currently in the process of being returned.
+                                currentState.status = 'בתהליך חזרה'; // New status for clarity
+                            }
                         }
-                    } else if (order['סוג פעולה'] === 'העלאה') {
-                        if (order['סטטוס'] === 'סגור') {
-                            // העלאה סגורה -> פנויה
-                            containerStates[container] = { status: 'פנוי', order: order };
-                        }
+
+                        // Update related order details
+                        currentState.relatedOrderDocId = order['תעודה'];
+                        currentState.relatedCustomer = order['שם לקוח'];
                     }
+                    containerStates[container] = currentState; // Store the updated state
                 });
             });
 
-            // סינון מכולות שהסטטוס הסופי שלהן הוא 'בשימוש' או 'פנוי'
+            // Prepare data for display in the inventory table.
+            // Filter out containers with 'לא ידוע' status if desired, though current logic aims to define all.
             const containersData = Object.entries(containerStates).map(([containerNum, state]) => ({
                 containerNum,
                 status: state.status,
-                relatedOrderDocId: state.order['תעודה'] || '',
-                relatedCustomer: state.order['שם לקוח'] || ''
+                relatedOrderDocId: state.relatedOrderDocId || '',
+                relatedCustomer: state.relatedCustomer || ''
             }));
 
+            // Sort containers by number for consistent display
             containersData.sort((a, b) => a.containerNum.localeCompare(b.containerNum));
 
             if (containersData.length === 0) {
@@ -1667,7 +1695,17 @@
             } else {
                 containersData.forEach(item => {
                     const row = inventoryTableBody.insertRow();
-                    const statusClass = item.status === 'בשימוש' ? 'status-overdue' : 'status-open'; // אדום לשימוש, ירוק לפנוי
+                    let statusClass = '';
+                    if (item.status === 'בשימוש') {
+                        statusClass = 'status-overdue'; // Red for in use
+                    } else if (item.status === 'פנוי') {
+                        statusClass = 'status-open'; // Green for available
+                    } else if (item.status === 'בתהליך חזרה') {
+                        statusClass = 'status-warning'; // Orange for in return process
+                    } else {
+                        statusClass = 'status-pending'; // For 'לא ידוע' or other states
+                    }
+
                     row.insertCell().textContent = item.containerNum;
                     row.insertCell().innerHTML = `<span class="${statusClass}">${item.status}</span>`;
                     row.insertCell().textContent = item.relatedOrderDocId;
