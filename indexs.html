@@ -595,7 +595,7 @@
         function hideLoader() { document.getElementById('loader-overlay').classList.add('hidden'); }
 
         /**
-         * מציג הודעת Pop-up للمستخدم.
+         * מציג הודעת Pop-up للمשתמש.
          * @param {string} message ההודעה להצגה.
          * @param {'success'|'error'|'warning'|'info'} type סוג ההודעה (משפיע על צבע).
          */
@@ -671,8 +671,9 @@
             // חישוב מכולות בשימוש - נניח שמכולה בשימוש אם הסטטוס אינו 'סגור'
             const containersInUse = new Set();
             allOrders.forEach(order => {
-                if (order['סטטוס'] !== 'סגור' && order['מספרי מכולות']) {
-                    order['מספרי מכולות'].split(',').forEach(container => {
+                if (order['סטטוס'] !== 'סגור' && order['מספרי מכולות'] !== undefined && order['מספרי מכולות'] !== null) {
+                    // המרה למחרוזת לפני פיצול כדי למנוע שגיאות TypeError
+                    (order['מספרי מכולות'] || '').toString().split(',').forEach(container => {
                         const trimmedContainer = container.trim();
                         if (trimmedContainer) {
                             containersInUse.add(trimmedContainer);
@@ -1011,8 +1012,8 @@
                 customerCounts[customerName] = (customerCounts[customerName] || 0) + 1;
 
                 // בדיקת מכולות כפולות
-                if (order['מספרי מכולות']) {
-                    order['מספרי מכולות'].split(',').forEach(container => {
+                if (order['מספרי מכולות'] !== undefined && order['מספרי מכולות'] !== null) {
+                    (order['מספרי מכולות'] || '').toString().split(',').forEach(container => {
                         const trimmedContainer = container.trim();
                         if (trimmedContainer) {
                             if (!containerUsage[trimmedContainer]) {
@@ -1060,8 +1061,9 @@
             const customerContainerCounts = {}; // { customer: count }
             activeOrders.forEach(order => {
                 const customerName = order['שם לקוח'];
-                if (order['מספרי מכולות']) {
-                    const numContainers = order['מספרי מכולות'].split(',').filter(c => c.trim() !== '').length;
+                if (order['מספרי מכולות'] !== undefined && order['מספרי מכולות'] !== null) {
+                    // המרה למחרוזת לפני פיצול
+                    const numContainers = (order['מספרי מכולות'] || '').toString().split(',').filter(c => c.trim() !== '').length;
                     customerContainerCounts[customerName] = (customerContainerCounts[customerName] || 0) + numContainers;
                 }
             });
