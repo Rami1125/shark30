@@ -1,5 +1,5 @@
 // == Configuration ==
-const API_BASE = 'https://script.google.com/macros/s/YOUR_DEPLOYED_ID/exec'; // PUT your GAS webapp URL here
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyn_XlZa0_FY95TlrdHYc4CLFOVWbdI0hhi6Qv6OviHI7_Oa9-DETzz9jjUc_AXYmysmw/exec'; // PUT your GAS webapp URL here
 let showClosed = false;
 
 // Mock for quick demo (will be replaced by fetchOrders)
