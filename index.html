@@ -332,7 +332,7 @@
 
     <script>
         // Google Apps Script URL for data operations
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxorjB_uddO1jSLCwWSGUSg4ttlcJU5lHohRX10kYXvpDLKDwqpAib_GZ_-MhVHN1cV/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2aHXGfZK2bcRvIbJ4jrYgmmb1SkZJhUBCHxMv3nFTevQl_Q3Q7U0WDPJ8nVQPKNw/exec';
 
         let allOrders = []; // Stores all fetched orders
         let currentEditingIndex = null; // Used for edit/duplicate operations
@@ -520,7 +520,7 @@
                 // Or if 'פינוי' is expected but not yet marked 'closed' and days passed is high
                 if (order.actionType === 'הצבה' && daysPassed > 30 && order.closed !== 'V') {
                     isOverdue = true;
-                } else if (order.actionType === 'פינוי' && order.closed !== 'V' && daysPassed > 14) { // Assuming pick up should be faster
+                } else if (order.actionType === 'פינוי' && daysPassed > 14 && order.closed !== 'V') { // Assuming pick up should be faster
                     isOverdue = true;
                 }
 
@@ -572,6 +572,7 @@
             const activeClients = new Set(activeOrders.map(order => order.clientName).filter(Boolean)).size;
             const totalOrders = allOrders.length;
 
+            // Calculate overdueCount within this function
             let overdueCount = 0;
             activeOrders.forEach(order => {
                 const { daysPassed } = calculateDays(order.orderDate);
@@ -676,7 +677,7 @@
             document.getElementById('closed-status').checked = (order.closed === 'V');
 
             openModal('order-modal');
-        }
+        });
 
         // Submit Add/Edit Form
         document.getElementById('order-form').addEventListener('submit', async (e) => {
