@@ -340,7 +340,7 @@
         const OrderFormModal = ({ isOpen, onClose, onSubmit, initialData }) => {
             const [formData, setFormData] = React.useState({
                 'מתאריך': '', 'תעודה': '', 'שם סוכן': '', 'שם לקוח': '', 'כתובת': '',
-                'סוג פעולה': 'הצבה', 'ימים שעברו': '', 'מס" מכולה ירדה': '', 'מס" מכולה עלתה': '',
+                'סוג פעולה': 'הצבה', 'יום החזרה': '', 'מס" מכולה ירדה': '', 'מס" מכולה עלתה': '',
                 'ימים שעברו (עלתה)': '', 'closed': 'פתוחה', 'הערות': '', rowIndex: null,
             });
 
@@ -372,7 +372,7 @@
                     case 'ClientName': key = 'שם לקוח'; break;
                     case 'Address': key = 'כתובת'; break;
                     case 'ActionType': key = 'סוג פעולה'; break;
-                    case 'DaysPassed': key = 'ימים שעברו'; break;
+                    case 'DaysPassed': key = 'יום החזרה'; break;
                     case 'ContainerRemoved': key = 'מס" מכולה ירדה'; break;
                     case 'ContainerAdded': key = 'מס" מכולה עלתה'; break;
                     case 'DaysPassedAdded': key = 'ימים שעברו (עלתה)'; break;
