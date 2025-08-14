@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM לניהול שכירות מכולות</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+  <style>
+    :root {
+      --primary-color: #4285F4;
+      --secondary-color: #34A853;
+      --warning-color: #FBBC05;
+      --danger-color: #EA4335;
+      --light-gray: #F5F5F5;
+      --dark-gray: #333333;
+      --border-color: #E0E0E0;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Rubik', sans-serif;
+      background-color: #FFFFFF;
+      color: var(--dark-gray);
+      line-height: 1.6;
+      direction: rtl;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--primary-color);
+    }
+    
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card-title {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .card-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    .card.open-orders .card-value {
+      color: var(--primary-color);
+    }
+    
+    .card.overdue-orders .card-value {
+      color: var(--danger-color);
+    }
+    
+    .card.active-containers .card-value {
+      color: var(--secondary-color);
+    }
+    
+    .card.active-customers .card-value {
+      color: var(--warning-color);
+    }
+    
+    .charts-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .chart-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    
+    .chart-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+    
+    .table-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: right;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    th {
+      background-color: var(--light-gray);
+      font-weight: 500;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr:hover {
+      background-color: rgba(66, 133, 244, 0.05);
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .status-open {
+      background-color: rgba(66, 133, 244, 0.1);
+      color: var(--primary-color);
+    }
+    
+    .status-closed {
+      background-color: rgba(52, 168, 83, 0.1);
+      color: var(--secondary-color);
+    }
+    
+    .status-overdue {
+      background-color: rgba(234, 67, 53, 0.1);
+      color: var(--danger-color);
+    }
+    
+    .action-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 5px;
+      margin: 0 3px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    .action-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #3367D6;
+    }
+    
+    .btn-secondary {
+      background-color: var(--secondary-color);
+    }
+    
+    .btn-secondary:hover {
+      background-color: #2D9249;
+    }
+    
+    .search-filter {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .filter-select {
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 16px;
+      background-color: white;
+    }
+    
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 4px;
+      color: white;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      transform: translateX(150%);
+      transition: transform 0.3s ease;
+    }
+    
+    .alert.show {
+      transform: translateX(0);
+    }
+    
+    .alert-success {
+      background-color: var(--secondary-color);
+    }
+    
+    .alert-error {
+      background-color: var(--danger-color);
+    }
+    
+    .alert-warning {
+      background-color: var(--warning-color);
+    }
+    
+    .alert-info {
+      background-color: var(--primary-color);
+    }
+    
+    .close-alert {
+      margin-right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tooltip .tooltip-text {
+      visibility: hidden;
+      width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .tooltip:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .dashboard-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .dashboard-cards {
+        grid-template-columns: 1fr;
+      }
+      
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>CRM לניהול שכירות מכולות</h1>
+      <button class="btn" id="addOrderBtn">הוספת הזמנה חדשה</button>
+    </header>
+    
+    <div class="dashboard-cards">
+      <div class="card open-orders">
+        <div class="card-title">הזמנות פתוחות</div>
+        <div class="card-value" id="openOrdersCount">0</div>
+      </div>
+      <div class="card overdue-orders">
+        <div class="card-title">הזמנות חורגות</div>
+        <div class="card-value" id="overdueOrdersCount">0</div>
+      </div>
+      <div class="card active-containers">
+        <div class="card-title">מכולות בשימוש</div>
+        <div class="card-value" id="activeContainersCount">0</div>
+      </div>
+      <div class="card active-customers">
+        <div class="card-title">לקוחות פעילים</div>
+        <div class="card-value" id="activeCustomersCount">0</div>
+      </div>
+    </div>
+    
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3 class="chart-title">התפלגות סטטוס הזמנות</h3>
+        <div class="chart-container">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3 class="chart-title">מכולות לפי לקוחות</h3>
+        <div class="chart-container">
+          <canvas id="containersChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <div class="search-filter">
+      <input type="text" class="search-input" id="searchInput" placeholder="חיפוש...">
+      <select class="filter-select" id="statusFilter">
+        <option value="all">כל הסטטוסים</option>
+        <option value="open">פתוחות בלבד</option>
+        <option value="closed">סגורות בלבד</option>
+      </select>
+      <select class="filter-select" id="operationFilter">
+        <option value="all">כל סוגי הפעולות</option>
+        <option value="יבוא">יבוא</option>
+        <option value="יצוא">יצוא</option>
+        <option value="אחסנה">אחסנה</option>
+      </select>
+    </div>
+    
+    <div class="table-container">
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>מתאריך</th>
+            <th>תעודה</th>
+            <th>שם סוכן</th>
+            <th>שם לקוח</th>
+            <th>כתובת</th>
+            <th>סוג פעולה</th>
+            <th>ימים שעברו</th>
+            <th>מספר מכולה</th>
+            <th>סטטוס</th>
+            <th>הערות</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <!-- נתוני ההזמנות יוטענו כאן -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- התראות -->
+  <div id="alertContainer"></div>
+  
+  <!-- מודל להוספת/עריכת הזמנה -->
+  <div class="modal" id="orderModal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="modalTitle">הוספת הזמנה חדשה</h3>
+      <form id="orderForm">
+        <input type="hidden" id="orderId">
+        <div class="form-group">
+          <label for="startDate" class="form-label">תאריך התחלה</label>
+          <input type="date" class="form-input" id="startDate" required>
+        </div>
+        <div class="form-group">
+          <label for="certificate" class="form-label">מספר תעודה</label>
+          <input type="text" class="form-input" id="certificate" required>
+        </div>
+        <div class="form-group">
+          <label for="agentName" class="form-label">שם סוכן</label>
+          <input type="text" class="form-input" id="agentName" required>
+        </div>
+        <div class="form-group">
+          <label for="customerName" class="form-label">שם לקוח</label>
+          <input type="text" class="form-input" id="customerName" required>
+        </div>
+        <div class="form-group">
+          <label for="address" class="form-label">כתובת</label>
+          <input type="text" class="form-input" id="address" required>
+        </div>
+        <div class="form-group">
+          <label for="operationType" class="form-label">סוג פעולה</label>
+          <select class="form-input" id="operationType" required>
+            <option value="יבוא">יבוא</option>
+            <option value="יצוא">יצוא</option>
+            <option value="אחסנה">אחסנה</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="containerNumber" class="form-label">מספר מכולה</label>
+          <input type="text" class="form-input" id="containerNumber" required>
+        </div>
+        <div class="form-group">
+          <label for="notes" class="form-label">הערות</label>
+          <textarea class="form-input" id="notes" rows="3"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" id="cancelBtn">ביטול</button>
+          <button type="submit" class="btn btn-secondary" id="saveBtn">שמור</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // כתובת הסקריפט של Google Apps
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDJZ-rGmv0CSr8S_B8TMoSkKxKrzc3D5TVIv5wYaRh8nb0ZXCXHXNxxMJ09fsRnVN2/exec';
+    
+    // אלמנטים בדף
+    const addOrderBtn = document.getElementById('addOrderBtn');
+    const ordersTableBody = document.getElementById('ordersTableBody');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const operationFilter = document.getElementById('operationFilter');
+    const orderModal = document.getElementById('orderModal');
+    const orderForm = document.getElementById('orderForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const alertContainer = document.getElementById('alertContainer');
+    
+    // תרשימים
+    let statusChart, containersChart;
+    
+    // טעינת נתונים ראשונית
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      
+      // מאזינים לאירועים
+      addOrderBtn.addEventListener('click', () => openOrderModal());
+      cancelBtn.addEventListener('click', () => closeOrderModal());
+      orderForm.addEventListener('submit', handleOrderSubmit);
+      searchInput.addEventListener('input', filterOrders);
+      statusFilter.addEventListener('change', filterOrders);
+      operationFilter.addEventListener('change', filterOrders);
+      
+      // אתחול תרשימים
+      initCharts();
+    });
+    
+    // טעינת נתונים
+    async function loadData() {
+      try {
+        // טעינת סטטיסטיקות
+        const statsResponse = await fetch(`${SCRIPT_URL}?action=stats`);
+        const statsData = await statsResponse.json();
+        
+        if (statsData.status === 'success') {
+          updateDashboard(statsData.data);
+        }
+        
+        // טעינת הזמנות
+        const ordersResponse = await fetch(`${SCRIPT_URL}?action=list`);
+        const ordersData = await ordersResponse.json();
+        
+        if (ordersData.status === 'success') {
+          renderOrdersTable(ordersData.data);
+          updateCharts(ordersData.data, statsData.data);
+        }
+      } catch (error) {
+        showAlert('error', 'שגיאה בטעינת נתונים: ' + error.message);
+      }
+    }
+    
+    // עדכון לוח המחוונים
+    function updateDashboard(stats) {
+      document.getElementById('openOrdersCount').textContent = stats.openOrders;
+      document.getElementById('overdueOrdersCount').textContent = stats.overdueOrders;
+      document.getElementById('activeContainersCount').textContent = stats.activeContainers;
+      document.getElementById('activeCustomersCount').textContent = stats.activeCustomers;
+    }
+    
+    // הצגת טבלת ההזמנות
+    function renderOrdersTable(orders) {
+      ordersTableBody.innerHTML = '';
+      
+      if (orders.length === 0) {
+        ordersTableBody.innerHTML = '<tr><td colspan="11" style="text-align: center;">לא נמצאו הזמנות</td></tr>';
+        return;
+      }
+      
+      orders.forEach(order => {
+        const row = document.createElement('tr');
+        
+        // חישוב ימים שעברו
+        const daysPassed = order.daysPassed || 0;
+        
+        // קביעת סטטוס
+        let statusClass = 'status-open';
+        let statusText = 'פתוחה';
+        
+        if (order.status === 'Closed') {
+          statusClass = 'status-closed';
+          statusText = 'סגורה';
+        } else if (daysPassed > 30) { // לדוגמה, חריגה אחרי 30 יום
+          statusClass = 'status-overdue';
+          statusText = 'חורגת';
+        }
+        
+        row.innerHTML = `
+          <td>${formatDate(order.startDate)}</td>
+          <td>${order.certificate || '-'}</td>
+          <td>${order.agentName || '-'}</td>
+          <td>${order.customerName || '-'}</td>
+          <td>${order.address || '-'}</td>
+          <td>${order.operationType || '-'}</td>
+          <td>${daysPassed}</td>
+          <td>${order.containerNumber || '-'}</td>
+          <td><span class="status ${statusClass}">${statusText}</span></td>
+          <td class="tooltip">${order.notes ? order.notes.substring(0, 15) + (order.notes.length > 15 ? '...' : '') : '-'}
+            ${order.notes && order.notes.length > 15 ? `<span class="tooltip-text">${order.notes}</span>` : ''}
+          </td>
+          <td>
+            <button class="action-btn edit-btn" data-id="${order.id}">✏️</button>
+            <button class="action-btn clone-btn" data-id="${order.id}">⎘</button>
+            <button class="action-btn close-btn" data-id="${order.id}">✓</button>
+            <button class="action-btn delete-btn" data-id="${order.id}">🗑️</button>
+          </td>
+        `;
+        
+        ordersTableBody.appendChild(row);
+      });
+      
+      // הוספת מאזינים לכפתורי הפעולה
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => openOrderModal(e.target.dataset.id));
+      });
+      
+      document.querySelectorAll('.clone-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => cloneOrder(e.target.dataset.id));
+      });
+      
+      document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => closeOrder(e.target.dataset.id));
+      });
+      
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => deleteOrder(e.target.dataset.id));
+      });
+    }
+    
+    // סינון הזמנות
+    function filterOrders() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusFilterValue = statusFilter.value;
+      const operationFilterValue = operationFilter.value;
+      
+      const rows = ordersTableBody.querySelectorAll('tr');
+      
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const statusCell = cells[8].textContent;
+        const operationCell = cells[5].textContent;
+        
+        let matchesSearch = true;
+        let matchesStatus = true;
+        let matchesOperation = true;
+        
+        // בדיקת חיפוש
+        if (searchTerm) {
+          matchesSearch = false;
+          for (let i = 0; i < cells.length - 1; i++) { // לא כולל עמודת פעולות
+            if (cells[i].textContent.toLowerCase().includes(searchTerm)) {
+              matchesSearch = true;
+              break;
+            }
+          }
+        }
+        
+        // בדיקת סטטוס
+        if (statusFilterValue !== 'all') {
+          if (statusFilterValue === 'open' && !statusCell.includes('פתוחה') && !statusCell.includes('חורגת')) {
+            matchesStatus = false;
+          } else if (statusFilterValue === 'closed' && !statusCell.includes('סגורה')) {
+            matchesStatus = false;
+          }
+        }
+        
+        // בדיקת סוג פעולה
+        if (operationFilterValue !== 'all' && operationCell !== operationFilterValue) {
+          matchesOperation = false;
+        }
+        
+        // הצגה/הסתרה של השורה
+        row.style.display = (matchesSearch && matchesStatus && matchesOperation) ? '' : 'none';
+      });
+    }
+    
+    // פתיחת מודל הזמנה
+    async function openOrderModal(orderId = null) {
+      if (orderId) {
+        // טעינת נתוני ההזמנה לעריכה
+        try {
+          const response = await fetch(`${SCRIPT_URL}?action=list`);
+          const data = await response.json();
+          
+          if (data.status === 'success') {
+            const order = data.data.find(o => o.id == orderId);
+            if (order) {
+              document.getElementById('orderId').value = order.id;
+              document.getElementById('startDate').value = formatDateForInput(order.startDate);
+              document.getElementById('certificate').value = order.certificate || '';
+              document.getElementById('agentName').value = order.agentName || '';
+              document.getElementById('customerName').value = order.customerName || '';
+              document.getElementById('address').value = order.address || '';
+              document.getElementById('operationType').value = order.operationType || 'יבוא';
+              document.getElementById('containerNumber').value = order.containerNumber || '';
+              document.getElementById('notes').value = order.notes || '';
+              
+              modalTitle.textContent = 'עריכת הזמנה';
+            }
+          }
+        } catch (error) {
+          showAlert('error', 'שגיאה בטעינת נתוני ההזמנה: ' + error.message);
+        }
+      } else {
+        // איפוס הטופס להוספת הזמנה חדשה
+        orderForm.reset();
+        document.getElementById('orderId').value = '';
+        modalTitle.textContent = 'הוספת הזמנה חדשה';
+      }
+      
+      orderModal.style.display = 'flex';
+    }
+    
+    // סגירת מודל הזמנה
+    function closeOrderModal() {
+      orderModal.style.display = 'none';
+    }
+    
+    // טיפול בהגשת טופס הזמנה
+    async function handleOrderSubmit(e) {
+      e.preventDefault();
+      
+      const orderId = document.getElementById('orderId').value;
+      const orderData = {
+        startDate: document.getElementById('startDate').value,
+        certificate: document.getElementById('certificate').value,
+        agentName: document.getElementById('agentName').value,
+        customerName: document.getElementById('customerName').value,
+        address: document.getElementById('address').value,
+        operationType: document.getElementById('operationType').value,
+        containerNumber: document.getElementById('containerNumber').value,
+        notes: document.getElementById('notes').value,
+        status: 'Open'
+      };
+      
+      try {
+        let response, action;
+        
+        if (orderId) {
+          orderData.id = orderId;
+          response = await fetch(`${SCRIPT_URL}?action=edit&data=${encodeURIComponent(JSON.stringify(orderData))}`);
+          action = 'עדכון';
+        } else {
+          response = await fetch(`${SCRIPT_URL}?action=add&data=${encodeURIComponent(JSON.stringify(orderData))}`);
+          action = 'הוספה';
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          showAlert('success', `ההזמנה ${action} בהצלחה`);
+          closeOrderModal();
+          loadData();
+        } else if (data.status === 'warning') {
+          showAlert('warning', `אזהרה: ${data.message}`, data.duplicates);
+        } else {
+          showAlert('error', `שגיאה ב${action} ההזמנה: ${data.message}`);
+        }
+      } catch (error) {
+        showAlert('error', `שגיאה ב${action} ההזמנה: ${error.message}`);
+      }
+    }
+    
+    // סגירת הזמנה
+    async function closeOrder(orderId) {
+      if (confirm('האם אתה בטוח שברצונך לסגור הזמנה זו?')) {
+        try {
+          const response = await fetch(`${SCRIPT_URL}?action=close&id=${orderId}`);
+          const data = await response.json();
+          
+          if (data.status === 'success') {
+            showAlert('success', 'ההזמנה נסגרה בהצלחה');
+            loadData();
+          } else {
+            showAlert('error', 'שגיאה בסגירת ההזמנה: ' + data.message);
+          }
+        } catch (error) {
+          showAlert('error', 'שגיאה בסגירת ההזמנה: ' + error.message);
+        }
+      }
+    }
+    
+    // מחיקת הזמנה
+    async function deleteOrder(orderId) {
+      if (confirm('האם אתה בטוח שברצונך למחוק הזמנה זו?')) {
+        try {
+          const response = await fetch(`${SCRIPT_URL}?action=delete&id=${orderId}`);
+          const data = await response.json();
+          
+          if (data.status === 'success') {
+            showAlert('success', 'ההזמנה נמחקה בהצלחה');
+            loadData();
+          } else {
+            showAlert('error', 'שגיאה במחיקת ההזמנה: ' + data.message);
+          }
+        } catch (error) {
+          showAlert('error', 'שגיאה במחיקת ההזמנה: ' + error.message);
+        }
+      }
+    }
+    
+    // שכפול הזמנה
+    async function cloneOrder(orderId) {
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=clone&id=${orderId}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          showAlert('success', 'ההזמנה שוכפלה בהצלחה');
+          loadData();
+        } else {
+          showAlert('error', 'שגיאה בשכפול ההזמנה: ' + data.message);
+        }
+      } catch (error) {
+        showAlert('error', 'שגיאה בשכפול ההזמנה: ' + error.message);
+      }
+    }
+    
+    // הצגת התראה
+    function showAlert(type, message, duplicates = null) {
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      
+      let alertContent = `
+        <span class="close-alert" onclick="this.parentElement.classList.remove('show')">&times;</span>
+        ${message}
+      `;
+      
+      // הוספת פרטי כפילויות אם קיימות
+      if (duplicates) {
+        if (duplicates.customerDuplicates.length > 0) {
+          alertContent += `<br><br><strong>לקוחות כפולים:</strong>`;
+          duplicates.customerDuplicates.forEach(dup => {
+            alertContent += `<br>• ${dup.customerName} (תעודה ${dup.certificate})`;
+          });
+        }
+        
+        if (duplicates.containerDuplicates.length > 0) {
+          alertContent += `<br><br><strong>מכולות כפולות:</strong>`;
+          duplicates.containerDuplicates.forEach(dup => {
+            alertContent += `<br>• ${dup.containerNumber} (לקוח ${dup.customerName})`;
+          });
+        }
+      }
+      
+      alert.innerHTML = alertContent;
+      alertContainer.appendChild(alert);
+      
+      // הצגת ההתראה
+      setTimeout(() => {
+        alert.classList.add('show');
+      }, 10);
+      
+      // הסתרת ההתראה לאחר זמן
+      setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+          alert.remove();
+        }, 300);
+      }, 5000);
+    }
+    
+    // אתחול תרשימים
+    function initCharts() {
+      const statusCtx = document.getElementById('statusChart').getContext('2d');
+      const containersCtx = document.getElementById('containersChart').getContext('2d');
+      
+      statusChart = new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+          labels: ['פתוחות', 'סגורות', 'חורגות'],
+          datasets: [{
+            data: [0, 0, 0],
+            backgroundColor: [
+              '#4285F4',
+              '#34A853',
+              '#EA4335'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              rtl: true
+            }
+          }
+        }
+      });
+      
+      containersChart = new Chart(containersCtx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'מספר מכולות',
+            data: [],
+            backgroundColor: '#4285F4',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+    
+    // עדכון תרשימים
+    function updateCharts(orders, stats) {
+      // עדכון תרשים סטטוסים
+      statusChart.data.datasets[0].data = [
+        stats.openOrders - stats.overdueOrders,
+        stats.statusDistribution.Closed || 0,
+        stats.overdueOrders
+      ];
+      statusChart.update();
+      
+      // הכנת נתונים לתרשים מכולות לפי לקוחות
+      const customerContainerCount = {};
+      orders.forEach(order => {
+        if (order.status !== 'Closed' && order.customerName && order.containerNumber) {
+          if (!customerContainerCount[order.customerName]) {
+            customerContainerCount[order.customerName] = 0;
+          }
+          customerContainerCount[order.customerName]++;
+        }
+      });
+      
+      const customers = Object.keys(customerContainerCount);
+      const containerCounts = Object.values(customerContainerCount);
+      
+      containersChart.data.labels = customers;
+      containersChart.data.datasets[0].data = containerCounts;
+      containersChart.update();
+    }
+    
+    // פונקציות עזר לעיצוב תאריכים
+    function formatDate(dateString) {
+      if (!dateString) return '-';
+      
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      return date.toLocaleDateString('he-IL');
+    }
+    
+    function formatDateForInput(dateString) {
+      if (!dateString) return '';
+      
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    }
+    
+    // חשיפת פונקציות לשימוש גלובלי
+    window.showAlert = showAlert;
+  </script>
+</body>
+</html>
