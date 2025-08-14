@@ -14,38 +14,55 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
+            background-color: #f0f2f5; /* מעט כהה יותר, בסיס בהיר */
             direction: rtl; /* Right-to-left for Hebrew */
             text-align: right; /* Align text right for RTL */
         }
         .container-card {
             background-color: #ffffff;
             border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Shadow enhancement */
             padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for hover */
+        }
+        .container-card:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15), 0 4px 8px -2px rgba(0, 0, 0, 0.1); /* Stronger shadow */
         }
         .btn-primary {
-            @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out;
+            @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105;
         }
         .btn-secondary {
-            @apply bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-400 transition duration-300 ease-in-out;
+            @apply bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-400 transition duration-300 ease-in-out transform hover:scale-105;
         }
         .btn-danger {
-            @apply bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition duration-300 ease-in-out;
+            @apply bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition duration-300 ease-in-out transform hover:scale-105;
         }
         .btn-warning {
-            @apply bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300 ease-in-out;
+            @apply bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105;
         }
         .input-field {
-            @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+            @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200;
         }
         .table-row-open {
             background-color: #ffffff;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            cursor: pointer;
+        }
+        .table-row-open:hover {
+            background-color: #f0f8ff; /* Light blue on hover for open rows */
+            transform: scale(1.005);
         }
         .table-row-closed {
-            background-color: #f1f5f9; /* Lighter gray for closed rows */
+            background-color: #f8fafc; /* Lighter gray for closed rows */
             text-decoration: line-through;
-            color: #718096; /* Darker gray text */
+            color: #94a3b8; /* Darker gray text */
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        .table-row-closed:hover {
+            background-color: #e0e7f0; /* Slightly darker gray on hover */
+            transform: scale(1.005);
         }
         .modal-overlay {
             position: fixed;
@@ -53,7 +70,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -61,11 +78,11 @@
         }
         .modal-content {
             background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem; /* Increased padding */
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08); /* Stronger shadow */
             width: 90%;
-            max-width: 600px;
+            max-width: 700px; /* Wider modal */
             max-height: 90vh; /* Limit height for scrollability */
             overflow-y: auto; /* Enable scrolling for taller modals */
             position: relative;
@@ -86,45 +103,41 @@
         .alert-banner:hover {
             background-color: #dc2626; /* Red-700 */
         }
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 120px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px 0;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%; /* Top */
-            right: 50%; /* Center horizontally */
-            margin-left: 0; /* Adjusted for RTL */
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
         /* Custom scrollbar for better look */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #e2e8f0; /* Light blue-gray track */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #888;
+            background: #94a3b8; /* Blue-gray thumb */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #64748b; /* Darker blue-gray on hover */
+        }
+
+        /* Specific style for table body to enable vertical scrolling */
+        #ordersTableContainer {
+            max-height: 60vh; /* Set a maximum height for the table body */
+            overflow-y: auto; /* Enable vertical scrolling */
+            border-radius: 0.75rem; /* Match card border-radius */
+            border: 1px solid #e2e8f0; /* Light border for definition */
+        }
+
+        #ordersTableBody {
+            display: block; /* Important for scrollable tbody */
+            overflow-y: auto; /* Handles its own scrolling if necessary */
+            height: auto; /* Allow content to define height within max-height of container */
+        }
+
+        #ordersTable thead, #ordersTable tbody tr {
+            display: table; /* Make table header and rows act like table elements */
+            width: 100%;
+            table-layout: fixed; /* Fix column widths */
         }
     </style>
 </head>
@@ -226,31 +239,33 @@
         <!-- Orders Table -->
         <div class="container-card overflow-x-auto mb-8">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">טבלת הזמנות</h2>
-            <table class="min-w-full bg-white rounded-lg shadow-md border border-gray-200">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">מתאריך</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">תעודה</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">שם סוכן</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">שם לקוח</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">כתובת</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">סוג פעולה</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">ימים שעברו (ירדה)</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">מס" מכולה ירדה</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">מס" מכולה עלתה</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">ימים שעברו (עלתה)</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">סטטוס</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">הערות</th>
-                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">פעולות</th>
-                    </tr>
-                </thead>
-                <tbody id="ordersTableBody" class="divide-y divide-gray-200">
-                    <!-- Orders will be loaded here by JavaScript -->
-                    <tr>
-                        <td colspan="13" class="text-center py-4 text-gray-500">טוען הזמנות...</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div id="ordersTableContainer" class="rounded-lg shadow-inner bg-gray-50 border border-gray-200">
+                <table id="ordersTable" class="min-w-full bg-white">
+                    <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">מתאריך</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">תעודה</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">שם סוכן</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">שם לקוח</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">כתובת</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">סוג פעולה</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">ימים שעברו (ירדה)</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">מס" מכולה ירדה</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">מס" מכולה עלתה</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">ימים שעברו (עלתה)</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">סטטוס</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">הערות</th>
+                            <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="divide-y divide-gray-200">
+                        <!-- Orders will be loaded here by JavaScript -->
+                        <tr>
+                            <td colspan="13" class="text-center py-4 text-gray-500">טוען הזמנות...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Charts Section -->
@@ -264,7 +279,7 @@
                 <canvas id="actionTypesChart"></canvas>
             </div>
         </div>
-        <!-- Placeholder for Days Remianing chart, will implement in future iteration -->
+        <!-- Placeholder for Days Remaining chart, will implement in future iteration -->
         <div class="container-card hidden">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">ימי שכירות שנותרו</h2>
             <canvas id="rentalDaysRemainingChart"></canvas>
@@ -343,6 +358,33 @@
                     <button type="button" class="btn-secondary" onclick="closeModal('orderModal')">ביטול</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Order Details POPUP Modal -->
+    <div id="orderDetailModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">פרטי הזמנה</h2>
+            <button class="absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('orderDetailModal')"><i class="fas fa-times"></i></button>
+
+            <div id="orderDetailsContent" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
+                <!-- Details will be populated here -->
+            </div>
+
+            <div class="flex justify-center gap-4 mt-8">
+                <button id="detailEditBtn" class="btn-primary flex items-center">
+                    <i class="fas fa-edit ml-2"></i> ערוך
+                </button>
+                <button id="detailDuplicateBtn" class="btn-warning flex items-center">
+                    <i class="fas fa-copy ml-2"></i> שכפל
+                </button>
+                <button id="detailCloseBtn" class="btn-secondary flex items-center">
+                    <i class="fas fa-check-circle ml-2"></i> סגור
+                </button>
+                <button id="detailDeleteBtn" class="btn-danger flex items-center">
+                    <i class="fas fa-trash ml-2"></i> מחק
+                </button>
+            </div>
         </div>
     </div>
 
@@ -461,7 +503,7 @@
                     showGeneralModal('שגיאה בשליפת נתונים', data.message);
                 }
             } catch (error) {
-                console.error('Error fetching orders:', error);
+                console.error('שגיאה בטעינת הזמנות:', error);
                 showGeneralModal('שגיאה', `לא ניתן לטעון הזמנות: ${error.message}`);
             } finally {
                 hideLoading();
@@ -507,6 +549,7 @@
                 const row = document.createElement('tr');
                 row.className = order.closed === 'סגורה' ? 'table-row-closed' : 'table-row-open';
                 row.dataset.rowIndex = order.rowIndex; // Store row index for actions
+                row.onclick = () => showOrderDetailsModal(order.rowIndex); // Add click listener for popup
 
                 // Define order of columns for rendering
                 const columns = [
@@ -533,26 +576,26 @@
                     row.appendChild(td);
                 });
 
-                // Action buttons column
+                // Action buttons column - prevent event propagation for row click
                 const actionsTd = document.createElement('td');
                 actionsTd.className = 'px-4 py-2 whitespace-nowrap text-sm font-medium border-b border-gray-200';
                 actionsTd.innerHTML = `
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <button onclick="editOrder(${order.rowIndex})" class="btn-primary p-2 text-sm">
+                        <button onclick="event.stopPropagation(); editOrder(${order.rowIndex})" class="btn-primary p-2 text-sm">
                             <i class="fas fa-edit"></i>
                             <span class="hidden sm:inline mr-1">ערוך</span>
                         </button>
-                        <button onclick="duplicateOrder(${order.rowIndex})" class="btn-warning p-2 text-sm">
+                        <button onclick="event.stopPropagation(); duplicateOrder(${order.rowIndex})" class="btn-warning p-2 text-sm">
                             <i class="fas fa-copy"></i>
                             <span class="hidden sm:inline mr-1">שכפל</span>
                         </button>
                         ${order.closed === 'פתוחה' ? `
-                        <button onclick="confirmCloseOrder(${order.rowIndex})" class="btn-secondary p-2 text-sm">
+                        <button onclick="event.stopPropagation(); confirmCloseOrder(${order.rowIndex})" class="btn-secondary p-2 text-sm">
                             <i class="fas fa-check-circle"></i>
                             <span class="hidden sm:inline mr-1">סגור</span>
                         </button>
                         ` : ''}
-                        <button onclick="confirmDeleteOrder(${order.rowIndex})" class="btn-danger p-2 text-sm">
+                        <button onclick="event.stopPropagation(); confirmDeleteOrder(${order.rowIndex})" class="btn-danger p-2 text-sm">
                             <i class="fas fa-trash"></i>
                             <span class="hidden sm:inline mr-1">מחק</span>
                         </button>
@@ -615,9 +658,10 @@
 
         /** Populates the modal for editing an existing order. */
         function editOrder(rowIndex) {
+            closeModal('orderDetailModal'); // Close details modal if open
             const orderToEdit = [...allOrders.openOrders, ...allOrders.closedOrders].find(order => order.rowIndex === rowIndex);
             if (!orderToEdit) {
-                showGeneralModal('שגיאה', 'הזמנה לא נמצאה לעריכה.');
+                showGeneralModal('שגיאה', 'ההזמנה לא נמצאה לעריכה.');
                 return;
             }
 
@@ -659,7 +703,6 @@
                 'ימים שעברו': document.getElementById('orderDaysPassed').value,
                 'מס" מכולה ירדה': document.getElementById('orderContainerRemoved').value,
                 'מס" מכולה עלתה': document.getElementById('orderContainerAdded').value,
-                // 'ימים שעברו (עלתה)': document.getElementById('orderDaysPassedAdded').value, // This is calculated by backend
                 'closed': document.getElementById('orderStatus').value,
                 'הערות': document.getElementById('orderNotes').value
             };
@@ -670,7 +713,6 @@
             } else {
                  formData['ימים שעברו (עלתה)'] = '';
             }
-
 
             const params = new URLSearchParams(formData);
             params.append('action', action);
@@ -690,7 +732,7 @@
                     showGeneralModal('שגיאה', data.message);
                 }
             } catch (error) {
-                console.error('Error saving order:', error);
+                console.error('שגיאה בשמירת הזמנה:', error);
                 showGeneralModal('שגיאה', `שגיאה בשמירת הזמנה: ${error.message}`);
             } finally {
                 hideLoading();
@@ -699,6 +741,7 @@
 
         /** Confirms and then closes an order. */
         function confirmCloseOrder(rowIndex) {
+            closeModal('orderDetailModal'); // Close details modal if open
             showGeneralModal(
                 'אשר סגירת הזמנה',
                 `האם אתה בטוח שברצונך לסגור את הזמנה בשורה ${rowIndex}?`,
@@ -715,7 +758,7 @@
                             showGeneralModal('שגיאה', data.message);
                         }
                     } catch (error) {
-                        console.error('Error closing order:', error);
+                        console.error('שגיאה בסגירת הזמנה:', error);
                         showGeneralModal('שגיאה', `שגיאה בסגירת הזמנה: ${error.message}`);
                     } finally {
                         hideLoading();
@@ -726,6 +769,7 @@
 
         /** Confirms and then deletes an order. */
         function confirmDeleteOrder(rowIndex) {
+            closeModal('orderDetailModal'); // Close details modal if open
             showGeneralModal(
                 'אשר מחיקת הזמנה',
                 `האם אתה בטוח שברצונך למחוק את הזמנה בשורה ${rowIndex}? פעולה זו אינה הפיכה!`,
@@ -742,7 +786,7 @@
                             showGeneralModal('שגיאה', data.message);
                         }
                     } catch (error) {
-                        console.error('Error deleting order:', error);
+                        console.error('שגיאה במחיקת הזמנה:', error);
                         showGeneralModal('שגיאה', `שגיאה במחיקת הזמנה: ${error.message}`);
                     } finally {
                         hideLoading();
@@ -753,6 +797,7 @@
 
         /** Duplicates an order. */
         async function duplicateOrder(rowIndex) {
+            closeModal('orderDetailModal'); // Close details modal if open
             showLoading();
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=duplicate&rowIndex=${rowIndex}`);
@@ -764,12 +809,78 @@
                     showGeneralModal('שגיאה', data.message);
                 }
             } catch (error) {
-                console.error('Error duplicating order:', error);
+                console.error('שגיאה בשכפול הזמנה:', error);
                 showGeneralModal('שגיאה', `שגיאה בשכפול הזמנה: ${error.message}`);
             } finally {
                 hideLoading();
             }
         }
+
+        // --- Order Details POPUP ---
+        function showOrderDetailsModal(rowIndex) {
+            const order = [...allOrders.openOrders, ...allOrders.closedOrders].find(o => o.rowIndex === rowIndex);
+            if (!order) {
+                showGeneralModal('שגיאה', 'פרטי ההזמנה לא נמצאו.');
+                return;
+            }
+
+            const detailsContent = document.getElementById('orderDetailsContent');
+            detailsContent.innerHTML = ''; // Clear previous content
+
+            // Map Hebrew column names to more readable labels for display
+            const displayLabels = {
+                'מתאריך': 'תאריך:',
+                'תעודה': 'מספר תעודה:',
+                'שם סוכן': 'סוכן:',
+                'שם לקוח': 'לקוח:',
+                'כתובת': 'כתובת:',
+                'סוג פעולה': 'סוג פעולה:',
+                'ימים שעברו': 'ימים שעברו (ירדה):',
+                'מס" מכולה ירדה': 'מכולה ירדה:',
+                'מס" מכולה עלתה': 'מכולה עלתה:',
+                'ימים שעברו (עלתה)': 'ימים שעברו (עלתה):',
+                'closed': 'סטטוס:',
+                'הערות': 'הערות:'
+            };
+
+            for (const key in displayLabels) {
+                const label = document.createElement('div');
+                label.className = 'col-span-1 text-gray-600 font-bold';
+                label.innerText = displayLabels[key];
+
+                const value = document.createElement('div');
+                value.className = 'col-span-1 text-gray-800';
+                let displayValue = order[key] || '-';
+
+                if (key === 'מתאריך') {
+                    displayValue = formatDisplayDate(displayValue);
+                }
+
+                value.innerText = displayValue;
+
+                detailsContent.appendChild(label);
+                detailsContent.appendChild(value);
+            }
+
+            // Set up action buttons in the detail modal
+            document.getElementById('detailEditBtn').onclick = () => editOrder(rowIndex);
+            document.getElementById('detailDuplicateBtn').onclick = () => duplicateOrder(rowIndex);
+
+            const detailCloseBtn = document.getElementById('detailCloseBtn');
+            const detailDeleteBtn = document.getElementById('detailDeleteBtn');
+
+            if (order.closed === 'פתוחה') {
+                detailCloseBtn.classList.remove('hidden');
+                detailCloseBtn.onclick = () => confirmCloseOrder(rowIndex);
+            } else {
+                detailCloseBtn.classList.add('hidden');
+            }
+            detailDeleteBtn.onclick = () => confirmDeleteOrder(rowIndex);
+
+
+            document.getElementById('orderDetailModal').classList.remove('hidden');
+        }
+
 
         // --- Alert System ---
 
@@ -796,13 +907,11 @@
             const containerIds = {};
             allOrders.openOrders.forEach(order => {
                 const containerAdded = order['מס" מכולה עלתה'];
-                const containerRemoved = order['מס" מכולה ירדה'];
+                // const containerRemoved = order['מס" מכולה ירדה']; // Removed this check as it's less critical for 'in use' duplicates
 
                 if (containerAdded) {
                     containerIds[containerAdded] = (containerIds[containerAdded] || 0) + 1;
                 }
-                // Also check removed containers if they are still "in use" in other open orders (more complex logic, simplified here)
-                // For simplicity, checking if same container is "added" multiple times across open orders.
             });
             for (const container in containerIds) {
                 if (containerIds[container] > 1) {
@@ -1039,9 +1148,9 @@
         //                         }
         //                     }
         //                 }
-        //             }
-        //         }
-        //     });
+            //         }
+            //     }
+            // });
         // }
 
 
