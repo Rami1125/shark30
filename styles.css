@@ -1,0 +1,32 @@
+:root{
+  --bg:#0f1724; --glass-bg: rgba(255,255,255,0.06); --accent:#6ee7b7; --danger:#ff4d4f; --text:#0b1020;
+}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",Roboto,'Heebo',sans-serif}
+body{margin:0;background:linear-gradient(180deg,#0b1220 0%, #0f1724 100%);color:#111;}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:8px;margin:12px;backdrop-filter:blur(6px);}
+.glass{background:var(--glass-bg);box-shadow:0 4px 20px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.04)}
+.brand{font-weight:700;font-size:18px;color:#fff}
+.actions .btn{margin-left:8px}
+.btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:#fff;cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,#5eead4,#34d399);color:#04221a;border:none}
+.container{padding:20px}
+.kpi-row{display:flex;gap:12px;margin-bottom:12px}
+.card{flex:1;padding:12px;border-radius:12px;text-align:center;color:#fff}
+.card .num{font-size:20px;font-weight:800}
+.card .label{font-size:12px;opacity:0.9}
+.table-wrap{padding:12px;border-radius:12px}
+table{width:100%;border-collapse:collapse}
+thead th{font-weight:700;padding:10px;text-align:right;color:#fff}
+tbody td{padding:12px;border-top:1px solid rgba(255,255,255,0.03);color:#fff}
+.row-overdue{animation:glow 1.8s ease-in-out infinite}
+@keyframes glow{0%{box-shadow:0 0 0 rgba(255,77,79,0)}50%{box-shadow:0 0 12px rgba(255,77,79,0.14)}100%{box-shadow:0 0 0 rgba(255,77,79,0)}}
+.actions-row .btn{margin-left:6px}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal.hidden{display:none}
+.modal-content{width:720px;padding:18px;border-radius:12px;position:relative}
+.modal-close{position:absolute;top:10px;left:10px;background:transparent;border:none;font-size:18px;color:#fff}
+.form-row{display:flex;flex-direction:column;margin-bottom:10px}
+.form-row label{font-size:13px;color:#e6eef0;margin-bottom:6px}
+.form-row input, .form-row select, .form-row textarea{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff}
+.popup{position:fixed;right:20px;bottom:20px;min-width:320px;padding:12px;border-radius:10px;background:#111;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+`
