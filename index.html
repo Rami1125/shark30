@@ -1,80 +1,101 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>לוח בקרה - מעקב מכולות</title>
-  <link rel="icon" href="https://www.google.com/favicon.ico">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #333;
-      color: white;
-      padding: 10px;
-      text-align: center;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-    th {
-      background-color: #555;
-      color: white;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>לוח בקרה - מעקב מכולות</title>
+<link rel="icon" href="https://www.google.com/favicon.ico">
+<style>
+body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+header { background: #333; color: white; padding: 10px; text-align: center; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #ddd; padding: 8px; }
+th { background-color: #555; color: white; }
+button { padding: 6px 10px; margin: 4px; border: none; border-radius: 4px; cursor: pointer; }
+button.primary { background-color: #34d399; color: white; }
+</style>
 </head>
 <body>
-  <header>
-    <h1>לוח בקרה - מעקב מכולות</h1>
-  </header>
-  <main>
-    <table id="ordersTable">
-      <thead>
-        <tr>
-          <th>מתאריך</th>
-          <th>תעודה</th>
-          <th>שם סוכן</th>
-          <th>שם לקוח</th>
-          <th>כתובת</th>
-          <th>סוג פעולה</th>
-          <th>ימים שעברו</th>
-          <th>מס' מכולה ירדה</th>
-          <th>מס' מכולה עלתה</th>
-          <th>ימים שעברו (עלתה)</th>
-          <th>closed</th>
-          <th>הערות</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-  </main>
-  <script>
-    async function loadOrders() {
-      const response = await fetch('/exec?action=list');
-      const orders = await response.json();
-      const tbody = document.querySelector('#ordersTable tbody');
-      tbody.innerHTML = '';
-      orders.forEach(order => {
-        const tr = document.createElement('tr');
-        for (let key in order) {
-          const td = document.createElement('td');
-          td.textContent = order[key];
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
+<header>
+<h1>לוח בקרה - מעקב מכולות</h1>
+<button id="btnAddMock" class="primary">הוסף הזמנה דמה</button>
+</header>
+<main>
+<table id="ordersTable">
+<thead>
+<tr>
+<th>מתאריך</th>
+<th>תעודה</th>
+<th>שם סוכן</th>
+<th>שם לקוח</th>
+<th>כתובת</th>
+<th>סוג פעולה</th>
+<th>ימים שעברו</th>
+<th>מס' מכולה ירדה</th>
+<th>מס' מכולה עלתה</th>
+<th>ימים שעברו (עלתה)</th>
+<th>closed</th>
+<th>הערות</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</main>
+<script>
+const API_BASE = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // הכנס כאן את ה-web app URL שלך
+
+async function loadOrders() {
+  try {
+    const response = await fetch(`${API_BASE}?action=list`);
+    const data = await response.json();
+    const tbody = document.querySelector('#ordersTable tbody');
+    tbody.innerHTML = '';
+    data.data.forEach(order => {
+      const tr = document.createElement('tr');
+      ['מתאריך','תעודה','שם סוכן','שם לקוח','כתובת','סוג פעולה','ימים שעברו','מס\' מכולה ירדה','מס\' מכולה עלתה','ימים שעברו (עלתה)','closed','הערות'].forEach(key => {
+        const td = document.createElement('td');
+        td.textContent = order[key] || '';
+        tr.appendChild(td);
       });
-    }
+      tbody.appendChild(tr);
+    });
+  } catch(err) {
+    console.error('Error fetching orders:', err);
+  }
+}
+
+async function addMockOrder() {
+  const mock = {
+    'מתאריך': '2025-08-14',
+    'תעודה': Math.floor(Math.random()*9000+1000).toString(),
+    'שם סוכן': 'דוגמא סוכן',
+    'שם לקוח': 'לקוח דמה',
+    'כתובת': 'כתובת דמה',
+    'סוג פעולה': 'הצבה',
+    'ימים שעברו': '0',
+    'מס\' מכולה ירדה': Math.floor(Math.random()*100).toString(),
+    'מס\' מכולה עלתה': Math.floor(Math.random()*100).toString(),
+    'ימים שעברו (עלתה)': '0',
+    'closed': '',
+    'הערות': 'הזמנה דמה'
+  };
+  try {
+    const res = await fetch(API_BASE + '?action=add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(mock)
+    });
+    const data = await res.json();
+    console.log('Added mock order:', data);
     loadOrders();
-  </script>
+  } catch(err) {
+    console.error('Error adding mock order:', err);
+  }
+}
+
+document.getElementById('btnAddMock').addEventListener('click', addMockOrder);
+
+loadOrders();
+</script>
 </body>
 </html>
