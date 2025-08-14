@@ -677,13 +677,79 @@
         
         // Helper Functions
         
-        function showLoading() {
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+// Loading Functions - Updated with better error handling
+function showLoading() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('hidden');
+        // Add timeout to ensure loading doesn't get stuck forever
+        setTimeout(() => {
+            if (!loadingOverlay.classList.contains('hidden')) {
+                console.warn('Loading overlay was visible for too long, forcing hide');
+                loadingOverlay.classList.add('hidden');
+            }
+        }, 30000); // 30 seconds timeout
+    }
+}
+
+function hideLoading() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    } else {
+        console.error('Loading overlay element not found');
+    }
+}
+
+// Updated fetchOrders function with better error handling
+async function fetchOrders() {
+    showLoading();
+    try {
+        const response = await fetch(`${SCRIPT_URL}?action=list`);
+        
+        // Check if the response is OK (status 200-299)
+        if (!response.ok) {
+            throw new Error(`שגיאת תקשורת: ${response.status} ${response.statusText}`);
         }
         
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
+        const data = await response.json();
+        
+        // Check if the response contains valid data
+        if (!data) {
+            throw new Error('התגובה מהשרת לא מכילה נתונים');
         }
+        
+        if (data.status === 'success') {
+            allOrders = data.data;
+            filteredOrders = [...allOrders.openOrders, ...allOrders.closedOrders];
+            updateDashboard();
+            renderOrdersTable(filteredOrders);
+            updateCharts();
+            runAlertChecks();
+        } else {
+            throw new Error(data.message || 'שגיאה לא צפויה בשליפת נתונים');
+        }
+    } catch (error) {
+        console.error('שגיאה בטעינת הזמנות:', error);
+        showGeneralModal('שגיאה', `לא ניתן לטעון הזמנות. אנא נסה שוב מאוחר יותר.<br><small>${error.message}</small>`);
+    } finally {
+        // This will always run, ensuring loading is hidden
+        hideLoading();
+    }
+}
+
+// Initialize with error handling
+window.addEventListener('load', () => {
+    try {
+        updateLiveDateTime();
+        setInterval(updateLiveDateTime, 1000);
+        fetchOrders();
+    } catch (error) {
+        console.error('שגיאה באתחול המערכת:', error);
+        hideLoading(); // Ensure loading is hidden even if initialization fails
+        showGeneralModal('שגיאת אתחול', 'אירעה שגיאה בהעלאת המערכת. אנא רענן את הדף.');
+    }
+});
         
         function showGeneralModal(title, message, isConfirm = false, onConfirm = null) {
             document.getElementById('alertModalTitle').innerText = title;
