@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת CRM לניהול מכולות</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* רקע יוקרתי עם גרדיאנט עדין וצבעי הסגול-כחול */
+            background: linear-gradient(135deg, #e0e7ff 0%, #c3dafe 100%); /* סגול בהיר-כחול בהיר */
+            direction: rtl; /* Right-to-left for Hebrew */
+            text-align: right; /* Align text right for RTL */
+            min-height: 100vh; /* ודא שהגוף תופס לפחות את גובה המסך */
+            display: flex;
+            flex-direction: column;
+            color: #333; /* צבע טקסט כללי כהה יותר */
+        }
+        h1, h2, h3 {
+            color: #222; /* כותרות כהות יותר */
+        }
+        .main-content {
+            flex-grow: 1; /* מאפשר לתוכן המרכזי לתפוס את השטח הזמין */
+            padding-bottom: 2rem; /* רווח בתחתית */
+        }
+
+        /* Glassmorphism Base Styles - with more prominent borders and glow */
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.2); /* שקיפות עדינה יותר ללבן, מעט יותר אטום */
+            backdrop-filter: blur(15px); /* אפקט טשטוש מודגש מאוד */
+            border: 1px solid rgba(255, 255, 255, 0.6); /* מסגרת לבנה בולטת יותר */
+            border-radius: 1.25rem; /* rounded-2xl, עגול יותר */
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); /* צל עמוק עם גוון כחלחל-סגלגל */
+            padding: 1.75rem; /* הגדלת רווח פנימי */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for hover */
+            position: relative;
+            overflow: hidden; /* For glow effect */
+            z-index: 1; /* וודא שהכרטיסיות מעל הרקע */
+        }
+        .glass-card:hover {
+            transform: translateY(-8px); /* Lift effect on hover, מודגש יותר */
+            box-shadow: 0 16px 48px 0 rgba(31, 38, 135, 0.45); /* צל חזק יותר */
+        }
+        /* Glow effect for cards on hover */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, transparent 70%); /* הברקה לבנה מודגשת */
+            opacity: 0;
+            transform: rotate(45deg);
+            transition: opacity 0.6s ease-out; /* אנימציה איטית יותר */
+            z-index: 0;
+        }
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Buttons with new colors and glow */
+        .btn-primary {
+            @apply bg-purple-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:bg-purple-800 transition duration-300 ease-in-out transform hover:scale-105; /* סגול כהה יותר, עגול יותר, צל בולט */
+            position: relative;
+            overflow: hidden;
+            z-index: 1; /* Ensure glow is behind text */
+        }
+        .btn-primary::after { /* Glow for primary buttons */
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%); /* הברקה חזקה יותר */
+            opacity: 0;
+            transform: rotate(45deg);
+            transition: opacity 0.6s ease-out;
+            z-index: 0;
+        }
+        .btn-primary:hover::after { opacity: 1; }
+
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-800 font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 ease-in-out transform hover:scale-105; /* אפור בהיר יותר */
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-secondary::after { /* Glow for secondary buttons */
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transform: rotate(45deg);
+            transition: opacity 0.6s ease-out;
+            z-index: 0;
+        }
+        .btn-secondary:hover::after { opacity: 1; }
+
+        .btn-danger {
+            @apply bg-orange-600 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:bg-orange-700 transition duration-300 ease-in-out transform hover:scale-105; /* כתום חי */
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-danger::after { /* Glow for danger buttons */
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            opacity: 0;
+            transform: rotate(45deg);
+            transition: opacity 0.6s ease-out;
+            z-index: 0;
+        }
+        .btn-danger:hover::after { opacity: 1; }
+
+        .btn-warning {
+            @apply bg-yellow-500 text-white font-semibold py-2.5 px-5 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-warning::after { /* Glow for warning buttons */
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            opacity: 0;
+            transform: rotate(45deg);
+            transition: opacity 0.6s ease-out;
+            z-index: 0;
+        }
+        .btn-warning:hover::after { opacity: 1; }
+
+        .input-field {
+            @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-200; /* טבעת סגולה */
+            background-color: rgba(255, 255, 255, 0.85); /* שקיפות גבוהה יותר לשדות קלט */
+            color: #333; /* צבע טקסט כהה בשדה קלט */
+        }
+        /* Placeholder styling */
+        .input-field::placeholder {
+            color: #666;
+            opacity: 1; /* Firefox fix */
+        }
+        .table-row-open {
+            background-color: rgba(255, 255, 255, 0.8); /* שקיפות עדינה יותר ללבן */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            cursor: pointer;
+        }
+        .table-row-open:hover {
+            background-color: rgba(240, 248, 255, 0.9); /* Light blue on hover for open rows */
+            transform: scale(1.005);
+        }
+        .table-row-closed {
+            background-color: rgba(248, 250, 252, 0.7); /* Lighter gray for closed rows, יותר אטום */
+            text-decoration: line-through;
+            color: #94a3b8; /* Darker gray text */
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        .table-row-closed:hover {
+            background-color: rgba(224, 231, 240, 0.8); /* Slightly darker gray on hover */
+            transform: scale(1.005);
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay, כמעט אטום */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* מעל הכל */
+        }
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.95); /* שקיפות גבוהה מאוד במודל */
+            backdrop-filter: blur(25px); /* טשטוש חזק מאוד למודל */
+            border: 1px solid rgba(255, 255, 255, 0.8); /* מסגרת לבנה חזקה */
+            padding: 3rem; /* הגדלת רווח פנימי */
+            border-radius: 1.5rem; /* עגול יותר */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.2); /* צל חזק ועמוק */
+            width: 95%;
+            max-width: 800px; /* מודל רחב יותר */
+            max-height: 90vh; /* Limit height for scrollability */
+            overflow-y: auto; /* Enable scrolling for taller modals */
+            position: relative;
+        }
+        .alert-banner {
+            background-color: #f97316; /* Orange-500 for alerts */
+            color: #ffffff;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            position: sticky; /* Stick to top */
+            top: 0;
+            z-index: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .alert-banner:hover {
+            background-color: #ea580c; /* Darker orange on hover */
+        }
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.5); /* Light blue-gray track with transparency */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a78bfa; /* Purple thumb */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6; /* Darker purple on hover */
+        }
+
+        /* Specific style for table body to enable vertical scrolling */
+        #ordersTableContainer {
+            max-height: 60vh; /* Set a maximum height for the table body */
+            overflow-y: hidden; /* Prevent vertical overflow on the container */
+            border-radius: 1.25rem; /* Match card border-radius */
+            border: 1px solid rgba(226, 232, 240, 0.5); /* Light border for definition */
+            background-color: rgba(255, 255, 255, 0.1); /* רקע עדין לתוך קונטיינר הטבלה */
+            display: flex; /* Make it a flex container for the table header and body */
+            flex-direction: column; /* Stack header and body vertically */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05); /* צל פנימי עדין */
+        }
+
+        #ordersTable {
+            width: 100%; /* Ensure table takes full width of container */
+            border-collapse: collapse; /* For clean borders */
+            table-layout: fixed; /* Fix column widths for alignment */
+        }
+
+        #ordersTable thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: rgba(255, 255, 255, 0.85); /* Slightly transparent white for sticky header, יותר אטום */
+            backdrop-filter: blur(8px); /* Subtle blur for header */
+        }
+
+        #ordersTable tbody {
+            display: block; /* Important: makes tbody scrollable independently */
+            overflow-y: auto; /* Enable vertical scrolling for the body */
+            height: auto; /* Allow content to define height within max-height of container */
+            max-height: calc(60vh - 4.5rem); /* Adjust max-height to account for sticky header height (approx 42px header height + padding) */
+            width: 100%; /* Ensure tbody takes full width */
+        }
+        
+        #ordersTable thead tr {
+            display: table; /* Makes thead row behave like a table row for width consistency */
+            width: 100%;
+            table-layout: fixed;
+        }
+        #ordersTable tbody tr {
+            display: table; /* Makes tbody rows behave like table rows for width consistency */
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        /* Responsive table column widths - adjusted for better fit */
+        #ordersTable thead th, #ordersTable tbody td {
+            white-space: nowrap; /* Prevent wrapping for better column alignment */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Add ellipsis for overflow text */
+            padding: 0.85rem 1rem; /* Adjust padding for spacing */
+            box-sizing: border-box; /* Include padding in width calculation */
+            border-bottom: 1px solid rgba(226, 232, 240, 0.4); /* קו הפרדה עדין בין השורות */
+        }
+        #ordersTable thead th {
+            font-size: 0.8rem; /* כותרות עמודות קטנות יותר */
+        }
+
+
+        /* Default (large screens) column widths - Sums to 100% */
+        #ordersTable thead th:nth-child(1), #ordersTable tbody td:nth-child(1) { width: 7%; } /* מתאריך */
+        #ordersTable thead th:nth-child(2), #ordersTable tbody td:nth-child(2) { width: 5%; } /* תעודה */
+        #ordersTable thead th:nth-child(3), #ordersTable tbody td:nth-child(3) { width: 7%; } /* שם סוכן */
+        #ordersTable thead th:nth-child(4), #ordersTable tbody td:nth-child(4) { width: 10%; } /* שם לקוח */
+        #ordersTable thead th:nth-child(5), #ordersTable tbody td:nth-child(5) { width: 12%; } /* כתובת */
+        #ordersTable thead th:nth-child(6), #ordersTable tbody td:nth-child(6) { width: 7%; } /* סוג פעולה */
+        #ordersTable thead th:nth-child(7), #ordersTable tbody td:nth-child(7) { width: 5%; } /* ימים שעברו (ירדה) */
+        #ordersTable thead th:nth-child(8), #ordersTable tbody td:nth-child(8) { width: 7%; } /* מס" מכולה ירדה */
+        #ordersTable thead th:nth-child(9), #ordersTable tbody td:nth-child(9) { width: 7%; } /* מס" מכולה עלתה */
+        #ordersTable thead th:nth-child(10), #ordersTable tbody td:nth-child(10) { width: 5%; } /* ימים שעברו (עלתה) */
+        #ordersTable thead th:nth-child(11), #ordersTable tbody td:nth-child(11) { width: 5%; } /* סטטוס */
+        #ordersTable thead th:nth-child(12), #ordersTable tbody td:nth-child(12) { width: 8%; } /* הערות */
+        #ordersTable thead th:last-child, #ordersTable tbody td:last-child { width: 14%; } /* פעולות */
+       
+        @media (max-width: 1023px) { /* Medium and small screens */
+            #ordersTableContainer {
+                overflow-x: auto; /* Enable horizontal scroll for smaller screens */
+            }
+            #ordersTable {
+                min-width: 1200px; /* Ensure table is wide enough to trigger horizontal scroll */
+            }
+            #ordersTable tbody {
+                max-height: calc(60vh - 5.5rem); /* Adjust for header height + more padding on smaller screens */
+            }
+        }
+
+
+        /* Header specific styles */
+        .app-header {
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.25rem 2.5rem; /* פאדינג גדול יותר */
+            margin-bottom: 2rem;
+            border-radius: 0 0 1.5rem 1.5rem; /* Rounded bottom corners, עגול יותר */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 1.5rem; /* Spacing between elements */
+        }
+
+        .logo-text {
+            font-size: 2.25rem; /* גודל לוגו גדול יותר */
+            font-weight: 700;
+            color: #4c1d95; /* Deep purple */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem; /* רווח גדול יותר בין אייקון לטקסט */
+        }
+        .logo-text i {
+            font-size: 2.5rem; /* גודל אייקון גדול יותר */
+        }
+
+        .datetime-display {
+            background-color: rgba(255, 255, 255, 0.15); /* רקע בהיר יותר וקצת יותר אטום */
+            border: 1px solid rgba(255, 255, 255, 0.4); /* מסגרת בולטת יותר */
+            border-radius: 0.75rem; /* עגול יותר */
+            padding: 0.75rem 1.25rem; /* פאדינג גדול יותר */
+            color: #6d28d9; /* Medium purple */
+            font-weight: 600; /* מודגש יותר */
+            font-size: 1rem; /* גודל פונט גדול יותר */
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.08); /* צל פנימי מודגש יותר */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-[2000] hidden">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
+            <p class="text-white mt-4 text-lg">טוען נתונים...</p>
+        </div>
+    </div>
+
+    <div class="app-header">
+        <div class="logo-text">
+            <i class="fas fa-cubes text-purple-700"></i>
+            <span>ניהול מכולות</span>
+        </div>
+        <div id="datetime" class="datetime-display"></div>
+    </div>
+
+    <div id="alertBanner" class="alert-banner hidden">
+        <p><i class="fas fa-exclamation-triangle ml-2"></i> ישנן <span id="exceedingOrdersCount">0</span> הזמנות חורגות. לחץ לסינון מהיר.</p>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8 main-content">
+        <!-- הכותרת הועברה לתוך ה-header למעלה, כאן היא מוסתרת -->
+
+        <!-- Dashboard Indicators -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"> <!-- רווחים גדולים יותר -->
+            <div class="glass-card flex items-center justify-between p-4">
+                <div>
+                    <p class="text-gray-600 text-sm">הזמנות פתוחות</p>
+                    <p id="openOrdersCount" class="text-2xl font-bold text-purple-600">0</p>
+                </div>
+                <i class="fas fa-box-open text-4xl text-purple-400"></i>
+            </div>
+            <div class="glass-card flex items-center justify-between p-4">
+                <div>
+                    <p class="text-gray-600 text-sm">הזמנות חורגות</p>
+                    <p id="exceedingOrdersCountCard" class="text-2xl font-bold text-orange-600">0</p>
+                </div>
+                <i class="fas fa-bell text-4xl text-orange-400"></i>
+            </div>
+            <div class="glass-card flex items-center justify-between p-4">
+                <div>
+                    <p class="text-gray-600 text-sm">מכולות בשימוש</p>
+                    <p id="inUseContainersCount" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <i class="fas fa-shipping-fast text-4xl text-green-400"></i>
+            </div>
+            <div class="glass-card flex items-center justify-between p-4">
+                <div>
+                    <p class="text-gray-600 text-sm">לקוחות פעילים</p>
+                    <p id="activeCustomersCount" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <i class="fas fa-users text-4xl text-blue-400"></i>
+            </div>
+        </div>
+
+        <!-- Add New Order Button -->
+        <div class="flex justify-end mb-6">
+            <button id="addOrderBtn" class="btn-primary flex items-center">
+                <i class="fas fa-plus ml-2"></i> הוסף הזמנה חדשה
+            </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="glass-card mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">חיפוש וסינון הזמנות</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="searchClientName" class="block text-gray-700 text-sm font-bold mb-2">שם לקוח:</label>
+                    <input type="text" id="searchClientName" placeholder="הכנס שם לקוח" class="input-field">
+                </div>
+                <div>
+                    <label for="searchAddress" class="block text-gray-700 text-sm font-bold mb-2">כתובת:</label>
+                    <input type="text" id="searchAddress" placeholder="הכנס כתובת" class="input-field">
+                </div>
+                <div>
+                    <label for="searchActionType" class="block text-gray-700 text-sm font-bold mb-2">סוג פעולה:</label>
+                    <select id="searchActionType" class="input-field">
+                        <option value="">הכל</option>
+                        <option value="הצבה">הצבה</option>
+                        <option value="הוצאה">הוצאה</option>
+                        <option value="פינוי במקום">פינוי במקום</option>
+                        <option value="החלפה">החלפה</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="searchStatus" class="block text-gray-700 text-sm font-bold mb-2">סטטוס:</label>
+                    <select id="searchStatus" class="input-field">
+                        <option value="">הכל</option>
+                        <option value="פתוחה">פתוחה</option>
+                        <option value="סגורה">סגורה</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="searchDate" class="block text-gray-700 text-sm font-bold mb-2">תאריך (מתאריך):</label>
+                    <input type="date" id="searchDate" class="input-field">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-4">
+                <button id="applyFilterBtn" class="btn-primary">הפעל סינון</button>
+                <button id="clearFilterBtn" class="btn-secondary">נקה סינון</button>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="glass-card overflow-x-auto mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">טבלת הזמנות</h2>
+            <div id="ordersTableContainer">
+                <table id="ordersTable" class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th>מתאריך</th>
+                            <th>תעודה</th>
+                            <th>שם סוכן</th>
+                            <th>שם לקוח</th>
+                            <th>כתובת</th>
+                            <th>סוג פעולה</th>
+                            <th>ימים שעברו (ירדה)</th>
+                            <th>מס" מכולה ירדה</th>
+                            <th>מס" מכולה עלתה</th>
+                            <th>ימים שעברו (עלתה)</th>
+                            <th>סטטוס</th>
+                            <th>הערות</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Orders will be loaded here by JavaScript -->
+                        <tr>
+                            <td colspan="13" class="text-center py-4 text-gray-500">טוען הזמנות...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"> <!-- רווחים גדולים יותר -->
+            <div class="glass-card">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">מכולות בשימוש לפי לקוחות</h2>
+                <canvas id="containersByClientChart"></canvas>
+            </div>
+            <div class="glass-card">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">סוגי פעולות</h2>
+                <canvas id="actionTypesChart"></canvas>
+            </div>
+        </div>
+        <!-- Placeholder for Days Remaining chart, will implement in future iteration -->
+        <div class="glass-card hidden">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">ימי שכירות שנותרו</h2>
+            <canvas id="rentalDaysRemainingChart"></canvas>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Add/Edit Order Modal -->
+    <div id="orderModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="orderModalTitle" class="text-2xl font-bold mb-6 text-gray-800">הוסף הזמנה חדשה</h2>
+            <button class="absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('orderModal')"><i class="fas fa-times"></i></button>
+
+            <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" id="orderRowIndex">
+                <div>
+                    <label for="orderFromDate" class="block text-gray-700 text-sm font-bold mb-2">מתאריך:</label>
+                    <input type="date" id="orderFromDate" class="input-field" required>
+                </div>
+                <div>
+                    <label for="orderDocumentId" class="block text-gray-700 text-sm font-bold mb-2">תעודה:</label>
+                    <input type="text" id="orderDocumentId" class="input-field" required>
+                </div>
+                <div>
+                    <label for="orderAgentName" class="block text-gray-700 text-sm font-bold mb-2">שם סוכן:</label>
+                    <input type="text" id="orderAgentName" class="input-field" required>
+                </div>
+                <div>
+                    <label for="orderClientName" class="block text-gray-700 text-sm font-bold mb-2">שם לקוח:</label>
+                    <input type="text" id="orderClientName" class="input-field" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="orderAddress" class="block text-gray-700 text-sm font-bold mb-2">כתובת:</label>
+                    <input type="text" id="orderAddress" class="input-field" required>
+                </div>
+                <div>
+                    <label for="orderActionType" class="block text-gray-700 text-sm font-bold mb-2">סוג פעולה:</label>
+                    <select id="orderActionType" class="input-field" required>
+                        <option value="הצבה">הצבה</option>
+                        <option value="הוצאה">הוצאה</option>
+                        <option value="פינוי במקום">פינוי במקום</option>
+                        <option value="החלפה">החלפה</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="orderDaysPassed" class="block text-gray-700 text-sm font-bold mb-2">ימים שעברו (ירדה):</label>
+                    <input type="number" id="orderDaysPassed" class="input-field">
+                </div>
+                <div>
+                    <label for="orderContainerRemoved" class="block text-gray-700 text-sm font-bold mb-2">מס" מכולה ירדה:</label>
+                    <input type="text" id="orderContainerRemoved" class="input-field">
+                </div>
+                <div>
+                    <label for="orderContainerAdded" class="block text-gray-700 text-sm font-bold mb-2">מס" מכולה עלתה:</label>
+                    <input type="text" id="orderContainerAdded" class="input-field">
+                </div>
+                <div>
+                    <label for="orderDaysPassedAdded" class="block text-gray-700 text-sm font-bold mb-2">ימים שעברו (עלתה):</label>
+                    <input type="number" id="orderDaysPassedAdded" class="input-field" disabled> <!-- Automatically calculated -->
+                </div>
+                <div>
+                    <label for="orderStatus" class="block text-gray-700 text-sm font-bold mb-2">סטטוס:</label>
+                    <select id="orderStatus" class="input-field" required>
+                        <option value="פתוחה">פתוחה</option>
+                        <option value="סגורה">סגורה</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="orderNotes" class="block text-gray-700 text-sm font-bold mb-2">הערות:</label>
+                    <textarea id="orderNotes" rows="3" class="input-field"></textarea>
+                </div>
+                <div class="md:col-span-2 flex justify-end gap-4 mt-6">
+                    <button type="submit" class="btn-primary" id="saveOrderBtn">שמור הזמנה</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('orderModal')">ביטול</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details POPUP Modal -->
+    <div id="orderDetailModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">פרטי הזמנה</h2>
+            <button class="absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('orderDetailModal')"><i class="fas fa-times"></i></button>
+
+            <div id="orderDetailsContent" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
+                <!-- Details will be populated here -->
+            </div>
+
+            <div class="flex justify-center gap-4 mt-8">
+                <button id="detailEditBtn" class="btn-primary flex items-center">
+                    <i class="fas fa-edit ml-2"></i> ערוך
+                </button>
+                <button id="detailDuplicateBtn" class="btn-warning flex items-center">
+                    <i class="fas fa-copy ml-2"></i> שכפל
+                </button>
+                <button id="detailCloseBtn" class="btn-secondary flex items-center">
+                    <i class="fas fa-check-circle ml-2"></i> סגור
+                </button>
+                <button id="detailDeleteBtn" class="btn-danger flex items-center">
+                    <i class="fas fa-trash ml-2"></i> מחק
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- General Alert/Confirmation Modal (improved styling and messages) -->
+    <div id="generalAlertModal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <button class="absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl" onclick="closeModal('generalAlertModal')"><i class="fas fa-times"></i></button>
+            <h3 id="alertModalTitle" class="text-xl font-semibold mb-4 text-gray-800"></h3>
+            <p id="alertModalMessage" class="text-gray-700 mb-6"></p>
+            <div id="alertModalActions" class="flex justify-center gap-4">
+                <button type="button" class="btn-primary" onclick="closeModal('generalAlertModal')">אישור</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // חשוב: כתובת ה-URL של יישום האינטרנט הפרוס שלך ב-Google Apps Script.
+        // וודא שזה תואם בדיוק לכתובת שקיבלת לאחר פריסת הסקריפט שלך!
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDJZ-rGmv0CS8S_B8TMoSkKxKrzc3D5TVIv5wYaRh8nb0ZXCXHXNxxMJ09fsRnVN2/exec'; 
+
+        let allOrders = { openOrders: [], closedOrders: [] };
+        let filteredOrders = [];
+        let containersByClientChart;
+        let actionTypesChart;
+        // let rentalDaysRemainingChart; // לפיתוח עתידי
+
+        // --- פונקציות עזר ---
+
+        /** מציג שכבת טעינה. */
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        /** מסתיר שכבת טעינה. */
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        /** מציג חלון קופץ כללי עם הודעה וכותרת. */
+        function showGeneralModal(title, message, isConfirm = false, onConfirm = null) {
+            document.getElementById('alertModalTitle').innerText = title;
+            document.getElementById('alertModalMessage').innerHTML = message; // השתמש ב-innerHTML לתמיכה ב-HTML
+            const actionsDiv = document.getElementById('alertModalActions');
+            actionsDiv.innerHTML = ''; // נקה כפתורים קודמים
+
+            if (isConfirm) {
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'btn-danger'; // השתמש בכתום לפעולת אישור מסוכנת
+                confirmBtn.innerText = 'כן, אשר';
+                confirmBtn.onclick = () => {
+                    if (onConfirm) onConfirm();
+                    closeModal('generalAlertModal');
+                };
+                actionsDiv.appendChild(confirmBtn);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn-secondary';
+                cancelBtn.innerText = 'ביטול';
+                cancelBtn.onclick = () => closeModal('generalAlertModal');
+                actionsDiv.appendChild(cancelBtn);
+            } else {
+                const okBtn = document.createElement('button');
+                okBtn.className = 'btn-primary'; // השתמש בסגול למידע כללי
+                okBtn.innerText = 'אישור';
+                okBtn.onclick = () => closeModal('generalAlertModal');
+                actionsDiv.appendChild(okBtn);
+            }
+            document.getElementById('generalAlertModal').classList.remove('hidden');
+        }
+
+        /** סוגר חלון קופץ ספציפי. */
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        /** מעצב מחרוזת תאריך לפורמט DD/MM/YYYY. */
+        function formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date)) return dateString; // החזר כפי שהוא אם התאריך לא חוקי
+            // וודא לוקאל 'he-IL' לפורמט תאריך עברי עקבי
+            return new Date(date).toLocaleDateString('he-IL', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        /** מחשב ימים שעברו מתאריך נתון ועד היום. */
+        function calculateDaysPassed(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // אפס זמן כדי להשוות תאריכים במדויק
+            date.setHours(0, 0, 0, 0);
+
+            const diffTime = today.getTime() - date.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 ? diffDays : 0; // אל תציג ימים שליליים
+        }
+
+        /** מציג תאריך ושעה חיים. */
+        function updateLiveDateTime() {
+            const now = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const formattedDate = now.toLocaleDateString('he-IL', dateOptions);
+            const formattedTime = now.toLocaleTimeString('he-IL', timeOptions);
+            document.getElementById('datetime').innerText = `${formattedDate} | ${formattedTime}`;
+        }
+
+
+        // --- שליפת נתונים ורינדור ממשק משתמש ---
+
+        /** שולף את כל ההזמנות מגיליון גוגל. */
+        async function fetchOrders() {
+            showLoading();
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=list`);
+                if (!response.ok) {
+                    throw new Error(`שגיאת תקשורת: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    allOrders = data.data;
+                    filteredOrders = [...allOrders.openOrders, ...allOrders.closedOrders]; // הצגה ראשונית של כל ההזמנות
+                    updateDashboard();
+                    renderOrdersTable(filteredOrders);
+                    updateCharts();
+                    runAlertChecks();
+                } else {
+                    showGeneralModal('שגיאה בשליפת נתונים', data.message);
+                }
+            } catch (error) {
+                console.error('שגיאה בטעינת הזמנות:', error);
+                showGeneralModal('שגיאה', `לא ניתן לטעון הזמנות. אנא וודא שהסקריפט פרוס כראוי ושכתובת ה-URL מעודכנת. ${error.message}`); // הודעת שגיאה מפורטת יותר
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /** מעדכן את כרטיסי המחוונים בלוח המחוונים. */
+        function updateDashboard() {
+            const openCount = allOrders.openOrders.length;
+            document.getElementById('openOrdersCount').innerText = openCount;
+
+            const exceedingOrders = allOrders.openOrders.filter(order => {
+                const daysPassedAdded = parseInt(order['ימים שעברו (עלתה)']);
+                return order['closed'] === 'פתוחה' && daysPassedAdded >= 7; // סף ל-"חורגות"
+            });
+            document.getElementById('exceedingOrdersCount').innerText = exceedingOrders.length;
+            document.getElementById('exceedingOrdersCountCard').innerText = exceedingOrders.length;
+
+            if (exceedingOrders.length > 0) {
+                document.getElementById('alertBanner').classList.remove('hidden');
+            } else {
+                document.getElementById('alertBanner').classList.add('hidden');
+            }
+
+            const inUseContainers = new Set(allOrders.openOrders.map(order => order['מס" מכולה עלתה']).filter(Boolean));
+            document.getElementById('inUseContainersCount').innerText = inUseContainers.size;
+
+            const activeCustomers = new Set(allOrders.openOrders.map(order => order['שם לקוח']).filter(Boolean));
+            document.getElementById('activeCustomersCount').innerText = activeCustomers.size;
+        }
+
+        /** מרנדר את טבלת ההזמנות עם הנתונים הנתונים. */
+        function renderOrdersTable(ordersToDisplay) {
+            const tableBody = document.getElementById('ordersTableBody');
+            tableBody.innerHTML = ''; // נקה שורות קיימות
+
+            if (ordersToDisplay.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="13" class="text-center py-4 text-gray-500">אין הזמנות להצגה.</td></tr>';
+                return;
+            }
+
+            ordersToDisplay.forEach(order => {
+                const row = document.createElement('tr');
+                row.className = order.closed === 'סגורה' ? 'table-row-closed' : 'table-row-open';
+                row.dataset.rowIndex = order.rowIndex; // שמור אינדקס שורה לפעולות
+                row.onclick = () => showOrderDetailsModal(order.rowIndex); // הוסף מאזין לחיצה לחלון קופץ
+
+                // הגדר סדר עמודות לרינדור
+                const columns = [
+                    'מתאריך', 'תעודה', 'שם סוכן', 'שם לקוח', 'כתובת', 'סוג פעולה',
+                    'ימים שעברו', 'מס" מכולה ירדה', 'מס" מכולה עלתה', 'ימים שעברו (עלתה)',
+                    'closed', 'הערות'
+                ];
+
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = 'px-4 py-2 whitespace-nowrap text-sm text-gray-800 border-b border-gray-200';
+                    let value = order[col] || '';
+
+                    // עיצוב מיוחד לתאריכים
+                    if (col === 'מתאריך') {
+                        value = formatDisplayDate(value);
+                    }
+                    // עיצוב מיוחד לעמודת סטטוס
+                    if (col === 'closed') {
+                        td.className += ` font-semibold ${value === 'פתוחה' ? 'text-green-600' : 'text-gray-500'}`;
+                    }
+
+                    td.innerText = value;
+                    row.appendChild(td);
+                });
+
+                // עמודת כפתורי פעולה - מנע התפשטות אירועים עבור לחיצת שורה
+                const actionsTd = document.createElement('td');
+                actionsTd.className = 'px-4 py-2 whitespace-nowrap text-sm font-medium border-b border-gray-200';
+                actionsTd.innerHTML = `
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button onclick="event.stopPropagation(); editOrder(${order.rowIndex})" class="btn-primary p-2 text-sm">
+                            <i class="fas fa-edit"></i>
+                            <span class="hidden sm:inline mr-1">ערוך</span>
+                        </button>
+                        <button onclick="event.stopPropagation(); duplicateOrder(${order.rowIndex})" class="btn-warning p-2 text-sm">
+                            <i class="fas fa-copy"></i>
+                            <span class="hidden sm:inline mr-1">שכפל</span>
+                        </button>
+                        ${order.closed === 'פתוחה' ? `
+                        <button onclick="event.stopPropagation(); confirmCloseOrder(${order.rowIndex})" class="btn-secondary p-2 text-sm">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="hidden sm:inline mr-1">סגור</span>
+                        </button>
+                        ` : ''}
+                        <button onclick="event.stopPropagation(); confirmDeleteOrder(${order.rowIndex})" class="btn-danger p-2 text-sm">
+                            <i class="fas fa-trash"></i>
+                            <span class="hidden sm:inline mr-1">מחק</span>
+                        </button>
+                    </div>
+                `;
+                row.appendChild(actionsTd);
+                tableBody.appendChild(row);
+            });
+        }
+
+        /** מסנן את טבלת ההזמנות על בסיס קלטי חיפוש. */
+        function applyFilter() {
+            const clientName = document.getElementById('searchClientName').value.toLowerCase();
+            const address = document.getElementById('searchAddress').value.toLowerCase();
+            const actionType = document.getElementById('searchActionType').value;
+            const status = document.getElementById('searchStatus').value;
+            const searchDate = document.getElementById('searchDate').value; // YYYY-MM-DD
+
+            const allCombinedOrders = [...allOrders.openOrders, ...allOrders.closedOrders];
+
+            filteredOrders = allCombinedOrders.filter(order => {
+                const matchesClient = clientName === '' || (order['שם לקוח'] && order['שם לקוח'].toLowerCase().includes(clientName));
+                const matchesAddress = address === '' || (order['כתובת'] && order['כתובת'].toLowerCase().includes(address));
+                const matchesActionType = actionType === '' || order['סוג פעולה'] === actionType;
+                const matchesStatus = status === '' || order['closed'] === status;
+
+                let matchesDate = true;
+                if (searchDate) {
+                    const orderDate = new Date(order['מתאריך']);
+                    const filterDate = new Date(searchDate);
+                    matchesDate = orderDate.toDateString() === filterDate.toDateString();
+                }
+                return matchesClient && matchesAddress && matchesActionType && matchesStatus && matchesDate;
+            });
+            renderOrdersTable(filteredOrders);
+        }
+
+        /** מנקה את כל קלטי הסינון ומרנדר מחדש את הטבלה המלאה. */
+        function clearFilter() {
+            document.getElementById('searchClientName').value = '';
+            document.getElementById('searchAddress').value = '';
+            document.getElementById('searchActionType').value = '';
+            document.getElementById('searchStatus').value = '';
+            document.getElementById('searchDate').value = '';
+            filteredOrders = [...allOrders.openOrders, ...allOrders.closedOrders];
+            renderOrdersTable(filteredOrders);
+        }
+
+        // --- פעולות CRUD (יצירה, קריאה, עדכון, מחיקה) ---
+
+        /** פותח את החלון הקופץ להוספת הזמנה חדשה. */
+        document.getElementById('addOrderBtn').addEventListener('click', () => {
+            document.getElementById('orderModalTitle').innerText = 'הוסף הזמנה חדשה';
+            document.getElementById('orderForm').reset();
+            document.getElementById('orderRowIndex').value = ''; // נקה אינדקס שורה עבור חדש
+            document.getElementById('orderDaysPassedAdded').disabled = true; // ימים שעברו (עלתה) מחושב אוטומטית עבור חדש
+            document.getElementById('orderStatus').value = 'פתוחה'; // סטטוס ברירת מחדל עבור חדש
+            document.getElementById('orderModal').classList.remove('hidden');
+        });
+
+        /** מאכלס את החלון הקופץ לעריכת הזמנה קיימת. */
+        function editOrder(rowIndex) {
+            closeModal('orderDetailModal'); // סגור את חלון הפרטים אם פתוח
+            const orderToEdit = [...allOrders.openOrders, ...allOrders.closedOrders].find(order => order.rowIndex === rowIndex);
+            if (!orderToEdit) {
+                showGeneralModal('שגיאה', 'ההזמנה לא נמצאה לעריכה.');
+                return;
+            }
+
+            document.getElementById('orderModalTitle').innerText = 'ערוך הזמנה';
+            document.getElementById('orderRowIndex').value = rowIndex;
+            document.getElementById('orderFromDate').value = orderToEdit['מתאריך'] ? new Date(orderToEdit['מתאריך']).toISOString().split('T')[0] : '';
+            document.getElementById('orderDocumentId').value = orderToEdit['תעודה'] || '';
+            document.getElementById('orderAgentName').value = orderToEdit['שם סוכן'] || '';
+            document.getElementById('orderClientName').value = orderToEdit['שם לקוח'] || '';
+            document.getElementById('orderAddress').value = orderToEdit['כתובת'] || '';
+            document.getElementById('orderActionType').value = orderToEdit['סוג פעולה'] || '';
+            document.getElementById('orderDaysPassed').value = orderToEdit['ימים שעברו'] || '';
+            document.getElementById('orderContainerRemoved').value = orderToEdit['מס" מכולה ירדה'] || '';
+            document.getElementById('orderContainerAdded').value = orderToEdit['מס" מכולה עלתה'] || '';
+            document.getElementById('orderDaysPassedAdded').value = orderToEdit['ימים שעברו (עלתה)'] || ''; // מלא מראש ערך מחושב
+            document.getElementById('orderDaysPassedAdded').disabled = true; // השאר מושבת כיוון שהוא מחושב
+            document.getElementById('orderStatus').value = orderToEdit['closed'] || 'פתוחה';
+            document.getElementById('orderNotes').value = orderToEdit['הערות'] || '';
+
+            document.getElementById('orderModal').classList.remove('hidden');
+        }
+
+        /** מטפל בשליחת טופס להוספה או עדכון הזמנה. */
+        document.getElementById('orderForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            showLoading();
+
+            const rowIndex = document.getElementById('orderRowIndex').value;
+            const isNew = !rowIndex;
+            const action = isNew ? 'add' : 'update';
+
+            const formData = {
+                'מתאריך': document.getElementById('orderFromDate').value,
+                'תעודה': document.getElementById('orderDocumentId').value,
+                'שם סוכן': document.getElementById('orderAgentName').value,
+                'שם לקוח': document.getElementById('orderClientName').value,
+                'כתובת': document.getElementById('orderAddress').value,
+                'סוג פעולה': document.getElementById('orderActionType').value,
+                'ימים שעברו': document.getElementById('orderDaysPassed').value,
+                'מס" מכולה ירדה': document.getElementById('orderContainerRemoved').value,
+                'מס" מכולה עלתה': document.getElementById('orderContainerAdded').value,
+                'closed': document.getElementById('orderStatus').value,
+                'הערות': document.getElementById('orderNotes').value
+            };
+
+            // חשב מחדש 'ימים שעברו (עלתה)' בצד הלקוח לפני שליחה עבור חדש/עריכה
+            if (formData['מס" מכולה עלתה'] && formData['מתאריך']) {
+                formData['ימים שעברו (עלתה)'] = calculateDaysPassed(formData['מתאריך']);
+            } else {
+                 formData['ימים שעברו (עלתה)'] = '';
+            }
+
+            const params = new URLSearchParams(formData);
+            params.append('action', action);
+            if (!isNew) {
+                params.append('rowIndex', rowIndex);
+            }
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showGeneralModal('הצלחה', data.message);
+                    closeModal('orderModal');
+                    await fetchOrders(); // טען מחדש כדי לעדכן טבלה ולוח מחוונים
+                } else {
+                    showGeneralModal('שגיאה', data.message);
+                }
+            } catch (error) {
+                console.error('שגיאה בשמירת הזמנה:', error);
+                showGeneralModal('שגיאה', `שגיאה בשמירת הזמנה. אנא נסה שוב.`); // הודעת שגיאה כללית בעברית
+            } finally {
+                hideLoading();
+            }
+        });
+
+        /** מאשר וסוגר הזמנה. */
+        function confirmCloseOrder(rowIndex) {
+            closeModal('orderDetailModal'); // סגור את חלון הפרטים אם פתוח
+            showGeneralModal(
+                'אשר סגירת הזמנה',
+                `האם אתה בטוח שברצונך לסגור את הזמנה בשורה ${rowIndex}?`,
+                true,
+                async () => {
+                    showLoading();
+                    try {
+                        const response = await fetch(`${SCRIPT_URL}?action=close&rowIndex=${rowIndex}`);
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            showGeneralModal('הצלחה', data.message);
+                            await fetchOrders();
+                        } else {
+                            showGeneralModal('שגיאה', data.message);
+                        }
+                    } catch (error) {
+                        console.error('שגיאה בסגירת הזמנה:', error);
+                        showGeneralModal('שגיאה', `שגיאה בסגירת הזמנה. אנא נסה שוב.`); // הודעת שגיאה כללית בעברית
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
+        /** מאשר ומוחק הזמנה. */
+        function confirmDeleteOrder(rowIndex) {
+            closeModal('orderDetailModal'); // סגור את חלון הפרטים אם פתוח
+            showGeneralModal(
+                'אשר מחיקת הזמנה',
+                `האם אתה בטוח שברצונך למחוק את הזמנה בשורה ${rowIndex}? פעולה זו אינה הפיכה!`,
+                true,
+                async () => {
+                    showLoading();
+                    try {
+                        const response = await fetch(`${SCRIPT_URL}?action=delete&rowIndex=${rowIndex}`);
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            showGeneralModal('הצלחה', data.message);
+                            await fetchOrders();
+                        } else {
+                            showGeneralModal('שגיאה', data.message);
+                        }
+                    } catch (error) {
+                        console.error('שגיאה במחיקת הזמנה:', error);
+                        showGeneralModal('שגיאה', `שגיאה במחיקת הזמנה. אנא נסה שוב.`); // הודעת שגיאה כללית בעברית
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
+        /** משכפל הזמנה. */
+        async function duplicateOrder(rowIndex) {
+            closeModal('orderDetailModal'); // סגור את חלון הפרטים אם פתוח
+            showLoading();
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=duplicate&rowIndex=${rowIndex}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showGeneralModal('הצלחה', data.message);
+                    await fetchOrders();
+                } else {
+                    showGeneralModal('שגיאה', data.message);
+                }
+            } catch (error) {
+                console.error('שגיאה בשכפול הזמנה:', error);
+                showGeneralModal('שגיאה', `שגיאה בשכפול הזמנה. אנא נסה שוב.`); // הודעת שגיאה כללית בעברית
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- חלון קופץ לפרטי הזמנה ---
+        function showOrderDetailsModal(rowIndex) {
+            const order = [...allOrders.openOrders, ...allOrders.closedOrders].find(o => o.rowIndex === rowIndex);
+            if (!order) {
+                showGeneralModal('שגיאה', 'פרטי ההזמנה לא נמצאו.');
+                return;
+            }
+
+            const detailsContent = document.getElementById('orderDetailsContent');
+            detailsContent.innerHTML = ''; // נקה תוכן קודם
+
+            // מפה שמות עמודות עבריים לתוויות קריאות יותר לתצוגה
+            const displayLabels = {
+                'מתאריך': 'תאריך:',
+                'תעודה': 'מספר תעודה:',
+                'שם סוכן': 'סוכן:',
+                'שם לקוח': 'לקוח:',
+                'כתובת': 'כתובת:',
+                'סוג פעולה': 'סוג פעולה:',
+                'ימים שעברו': 'ימים שעברו (ירדה):',
+                'מס" מכולה ירדה': 'מכולה ירדה:',
+                'מס" מכולה עלתה': 'מכולה עלתה:',
+                'ימים שעברו (עלתה)': 'ימים שעברו (עלתה):',
+                'closed': 'סטטוס:',
+                'הערות': 'הערות:'
+            };
+
+            for (const key in displayLabels) {
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'col-span-1 text-gray-600 font-bold text-sm md:text-base';
+                labelDiv.innerText = displayLabels[key];
+
+                const valueDiv = document.createElement('div');
+                valueDiv.className = 'col-span-1 text-gray-800 text-sm md:text-base';
+                let displayValue = order[key] || '-';
+
+                if (key === 'מתאריך') {
+                    displayValue = formatDisplayDate(displayValue);
+                }
+                 if (key === 'closed') {
+                    valueDiv.className += ` font-semibold ${displayValue === 'פתוחה' ? 'text-green-600' : 'text-gray-500'}`;
+                }
+
+                valueDiv.innerText = displayValue;
+
+                detailsContent.appendChild(labelDiv);
+                detailsContent.appendChild(valueDiv);
+            }
+
+            // הגדר כפתורי פעולה בחלון הפרטים
+            document.getElementById('detailEditBtn').onclick = () => editOrder(rowIndex);
+            document.getElementById('detailDuplicateBtn').onclick = () => duplicateOrder(rowIndex);
+
+            const detailCloseBtn = document.getElementById('detailCloseBtn');
+            const detailDeleteBtn = document.getElementById('detailDeleteBtn');
+
+            if (order.closed === 'פתוחה') {
+                detailCloseBtn.classList.remove('hidden');
+                detailCloseBtn.onclick = () => confirmCloseOrder(rowIndex);
+            } else {
+                detailCloseBtn.classList.add('hidden');
+            }
+            detailDeleteBtn.onclick = () => confirmDeleteOrder(rowIndex);
+
+            document.getElementById('orderDetailModal').classList.remove('hidden');
+        }
+
+
+        // --- מערכת התראות ---
+
+        /** מפעיל בדיקות לכפילויות והזמנות חורגות ומציג חלונות קופצים. */
+        function runAlertChecks() {
+            const allCombinedOrders = [...allOrders.openOrders, ...allOrders.closedOrders];
+            const alerts = [];
+
+            // בדוק כפילויות לקוחות (בהזמנות פתוחות לרלוונטיות)
+            const clientNames = {};
+            allOrders.openOrders.forEach(order => {
+                const client = order['שם לקוח'];
+                if (client) {
+                    clientNames[client] = (clientNames[client] || 0) + 1;
+                }
+            });
+            for (const client in clientNames) {
+                if (clientNames[client] > 1) {
+                    alerts.push(`לקוח כפול: הלקוח "${client}" מופיע ${clientNames[client]} פעמים בהזמנות פתוחות.`);
+                }
+            }
+
+            // בדוק כפילויות מכולות (בהזמנות פתוחות לרלוונטיות)
+            const containerIds = {};
+            allOrders.openOrders.forEach(order => {
+                const containerAdded = order['מס" מכולה עלתה'];
+                if (containerAdded) {
+                    containerIds[containerAdded] = (containerIds[containerAdded] || 0) + 1;
+                }
+            });
+            for (const container in containerIds) {
+                if (containerIds[container] > 1) {
+                    alerts.push(`מכולה כפולה: מכולה מספר "${container}" מופיעה ${containerIds[container]} פעמים בהזמנות פתוחות.`);
+                }
+            }
+
+            // בדוק חריגה בימי שכירות (ימים שעברו (עלתה))
+            allOrders.openOrders.forEach(order => {
+                const daysPassedAdded = parseInt(order['ימים שעברו (עלתה)']);
+                if (order['closed'] === 'פתוחה' && daysPassedAdded >= 7) { // סף להתראה
+                    alerts.push(`חריגה בימי שכירות: הזמנה מספר ${order['תעודה']} ללקוח "${order['שם לקוח']}" חורגת בימי השכירות (${daysPassedAdded} ימים).`);
+                }
+            });
+
+            if (alerts.length > 0) {
+                const alertsHtml = alerts.map(alert => `<li class="mb-2">${alert}</li>`).join('');
+                showGeneralModal(
+                    'התראות מערכת',
+                    `<ul class="list-disc list-inside text-right">${alertsHtml}</ul>`
+                );
+            }
+        }
+
+        // --- רינדור תרשימים ---
+
+        /** מעדכן את כל התרשימים על בסיס הנתונים הנוכחיים. */
+        function updateCharts() {
+            renderContainersByClientChart();
+            renderActionTypesChart();
+            // renderRentalDaysRemainingChart(); // לפיתוח עתידי
+        }
+
+        /** מרנדר את גרף העמודות עבור מכולות בשימוש לפי לקוח. */
+        function renderContainersByClientChart() {
+            const clientContainerCounts = {};
+            allOrders.openOrders.forEach(order => {
+                if (order['שם לקוח'] && order['מס" מכולה עלתה']) {
+                    clientContainerCounts[order['שם לקוח']] = (clientContainerCounts[order['שם לקוח']] || 0) + 1;
+                }
+            });
+
+            const labels = Object.keys(clientContainerCounts);
+            const data = Object.values(clientContainerCounts);
+
+            const ctx = document.getElementById('containersByClientChart').getContext('2d');
+            if (containersByClientChart) {
+                containersByClientChart.destroy(); // השמד מופע תרשים קודם
+            }
+            containersByClientChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר מכולות בשימוש',
+                        data: data,
+                        backgroundColor: 'rgba(139, 92, 246, 0.7)', /* סגול */
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'מכולות בשימוש לפי לקוח',
+                            font: {
+                                size: 16,
+                                family: 'Inter'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /** מרנדר את תרשים העוגה עבור סוגי פעולות. */
+        function renderActionTypesChart() {
+            const actionTypeCounts = {};
+            const allCombinedOrders = [...allOrders.openOrders, ...allOrders.closedOrders];
+            allCombinedOrders.forEach(order => {
+                const type = order['סוג פעולה'];
+                if (type) {
+                    actionTypeCounts[type] = (actionTypeCounts[type] || 0) + 1;
+                }
+            });
+
+            const labels = Object.keys(actionTypeCounts);
+            const data = Object.values(actionTypeCounts);
+            const backgroundColors = [
+                'rgba(251, 146, 60, 0.7)', /* כתום-500 */
+                'rgba(139, 92, 246, 0.7)', /* סגול-500 */
+                'rgba(59, 130, 246, 0.7)',  /* כחול-500 */
+                'rgba(75, 192, 192, 0.7)' /* טורקיז (אם יותר מ-3 סוגים) */
+            ];
+            const borderColors = [
+                'rgba(251, 146, 60, 1)',
+                'rgba(139, 92, 246, 1)',
+                'rgba(59, 130, 246, 1)',
+                'rgba(75, 192, 192, 1)'
+            ];
+
+            const ctx = document.getElementById('actionTypesChart').getContext('2d');
+            if (actionTypesChart) {
+                actionTypesChart.destroy(); // השמד מופע תרשים קודם
+            }
+            actionTypesChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'מספר פעולות',
+                        data: data,
+                        backgroundColor: backgroundColors.slice(0, labels.length),
+                        borderColor: borderColors.slice(0, labels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'חלוקת סוגי פעולות',
+                            font: {
+                                size: 16,
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- מאזיני אירועים ---
+
+        document.getElementById('applyFilterBtn').addEventListener('click', applyFilter);
+        document.getElementById('clearFilterBtn').addEventListener('click', clearFilter);
+        document.getElementById('alertBanner').addEventListener('click', () => {
+            document.getElementById('searchStatus').value = 'פתוחה'; // הגדר סטטוס לפתוח
+            applyFilter();
+            showGeneralModal('הזמנות חורגות', 'הטבלה סוננה להצגת הזמנות פתוחות שחורגות מימי השכירות.');
+        });
+
+        // טעינת נתונים ראשונית כשהדף מוכן
+        window.addEventListener('load', () => {
+            updateLiveDateTime(); // עדכן תאריך ושעה מיד בטעינה
+            setInterval(updateLiveDateTime, 1000); // עדכן כל שנייה
+            fetchOrders();
+        });
+    </script>
+</body>
+</html>
