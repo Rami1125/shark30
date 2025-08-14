@@ -1260,7 +1260,7 @@
             openOrders.forEach(order => { // רק הזמנות פתוחות/חורגות
                 // Add containers from "ירדה" or "מספרי מכולות" fields if action is pickup or exchange
                 if (order['סוג פעולה'] === 'הורדה' || order['סוג פעולה'] === 'החלפה') {
-                    const containers = (order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '').toString().split(',').map(c => c.trim()).filter(c => c);
+                    const containers = (String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '')).split(',').map(c => c.trim()).filter(c => c);
                     containers.forEach(container => {
                         if (container) containersInUse.add(container);
                     });
@@ -1330,14 +1330,14 @@
                 let containerNumbersForHistory = []; // To collect all container numbers for click events
 
                 if (order['סוג פעולה'] === 'הורדה') {
-                    containersToDisplay = order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '';
+                    containersToDisplay = String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '');
                     containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
                 } else if (order['סוג פעולה'] === 'העלאה') {
-                    containersToDisplay = order['מספר מכולה עלתה'] || order['מספרי מכולות'] || '';
+                    containersToDisplay = String(order['מספר מכולה עלתה'] || order['מספרי מכולות'] || '');
                     containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
                 } else if (order['סוג פעולה'] === 'החלפה') {
-                    const taken = order['מספר מכולה ירדה'] || '';
-                    const brought = order['מספר מכולה עלתה'] || '';
+                    const taken = String(order['מספר מכולה ירדה'] || '');
+                    const brought = String(order['מספר מכולה עלתה'] || '');
                     if (taken && brought) {
                         containersToDisplay = `ירדה: ${taken}, עלתה: ${brought}`;
                         containerNumbersForHistory = [taken, brought].map(c => c.trim()).filter(c => c);
@@ -1349,23 +1349,12 @@
                         containerNumbersForHistory = [brought].map(c => c.trim()).filter(c => c);
                     }
                 } else { // Fallback for old data or other types, assuming original 'מספרי מכולות'
-                    containersToDisplay = order['מספרי מכולות'] || '';
+                    containersToDisplay = String(order['מספרי מכולות'] || '');
                     containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
                 }
 
                 if (containerNumbersForHistory.length > 0) {
-                    containersCell.innerHTML = containerNumbersForHistory.map(containerNum => `
-                        <span class="text-blue-600 underline cursor-pointer hover:text-blue-800"
-                              onclick="event.stopPropagation(); openContainerHistoryModal('${containerNum}')">
-                            ${containersToDisplay.includes(containerNum) ? containersToDisplay.substring(containersToDisplay.indexOf(containerNum) - (order['סוג פעולה'] === 'החלפה' ? 6 : 0), containersToDisplay.indexOf(containerNum) + containerNum.length) : containerNum}
-                        </span>
-                    `).join(', ');
-                     // This substring logic is a bit complex for showing "ירדה: X, עלתה: Y" clickable.
-                     // A simpler approach would be to make the entire combined text clickable.
-                     // Or, just make the number itself clickable and let the modal clarify.
-                     // For now, it will make the whole "ירדה: X, עלתה: Y" string clickable for each number found.
-                     // Let's simplify and make each *number* itself clickable.
-                     containersCell.innerHTML = containerNumbersForHistory.map(containerNum => {
+                    containersCell.innerHTML = containerNumbersForHistory.map(containerNum => {
                         let displayPrefix = '';
                         if (order['סוג פעולה'] === 'החלפה') {
                             if ((order['מספר מכולה ירדה'] || '').includes(containerNum)) displayPrefix = 'ירדה: ';
@@ -1778,8 +1767,8 @@
                     (order['תעודה'] || '').toLowerCase().includes(searchText) ||
                     (order['כתובת'] || '').toLowerCase().includes(searchText) ||
                     (order['הערות'] || '').toLowerCase().includes(searchText) ||
-                    (order['מספר מכולה ירדה'] || '').toLowerCase().includes(searchText) || // Check new field
-                    (order['מספר מכולה עלתה'] || '').toLowerCase().includes(searchText); // Check new field
+                    (String(order['מספר מכולה ירדה'] || '')).toLowerCase().includes(searchText) || // Check new field with explicit String()
+                    (String(order['מספר מכולה עלתה'] || '')).toLowerCase().includes(searchText); // Check new field with explicit String()
 
 
                 const matchesStatus = filterStatus === 'all' || order['סטטוס'] === filterStatus;
@@ -1828,8 +1817,8 @@
 
                 // בדיקת מכולות כפולות בשימוש פעיל
                 // Check 'מספר מכולה ירדה' for containers in use
-                if ((order['סוג פעולה'] === 'הורדה' || order['סוג פעולה'] === 'החלפה') && order['מספר מכולה ירדה']) {
-                    (order['מספר מכולה ירדה'] || '').toString().split(',').forEach(container => {
+                if ((order['סוג פעולה'] === 'הורדה' || order['סוג פעולה'] === 'החלפה') && String(order['מספר מכולה ירדה'] || '')) {
+                    (String(order['מספר מכולה ירדה'] || '')).split(',').forEach(container => {
                         const trimmedContainer = container.trim();
                         if (trimmedContainer) {
                             if (!containerActiveUsage[trimmedContainer]) {
@@ -1889,14 +1878,14 @@
                 // Count containers based on new fields for 'הורדה' and 'החלפה'
                 let numContainers = 0;
                 if (order['סוג פעולה'] === 'הורדה' || order['סוג פעולה'] === 'החלפה') {
-                     numContainers = (order['מספר מכולה ירדה'] || '').toString().split(',').filter(c => c.trim() !== '').length;
-                } else if (order['סוג פעולה'] === 'העלאה' && order['מספר מכולה עלתה']) {
+                     numContainers = (String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '')).split(',').filter(c => c.trim() !== '').length;
+                } else if (order['סוג פעולה'] === 'העלאה' && String(order['מספר מכולה עלתה'] || '')) {
                     // If an 'העלאה' order is open, it might mean the container is still considered "in transition"
                     // but for overall 'in use' count, we only count containers taken by customers.
                     // This can be adjusted based on specific business logic.
                     // For now, only count 'ירדה' containers for "in use".
                 } else { // Fallback for old 'מספרי מכולות' field
-                    numContainers = (order['מספרי מכולות'] || '').toString().split(',').filter(c => c.trim() !== '').length;
+                    numContainers = (String(order['מספרי מכולות'] || '')).split(',').filter(c => c.trim() !== '').length;
                 }
 
                 if (numContainers > 0) {
@@ -2162,17 +2151,17 @@
                     // Display both container numbers for overdue customers if available
                     let containersText = '';
                     if (order['סוג פעולה'] === 'החלפה') {
-                        const taken = order['מספר מכולה ירדה'] || '';
-                        const brought = order['מספר מכולה עלתה'] || '';
+                        const taken = String(order['מספר מכולה ירדה'] || '');
+                        const brought = String(order['מספר מכולה עלתה'] || '');
                         if (taken && brought) containersText = `ירדה: ${taken}, עלתה: ${brought}`;
                         else if (taken) containersText = `ירדה: ${taken}`;
                         else if (brought) containersText = `עלתה: ${brought}`;
                     } else if (order['סוג פעולה'] === 'הורדה') {
-                        containersText = order['מספר מכולה ירדה'] || '';
+                        containersText = String(order['מספר מכולה ירדה'] || '');
                     } else if (order['סוג פעולה'] === 'העלאה') {
-                        containersText = order['מספר מכולה עלתה'] || '';
+                        containersText = String(order['מספר מכולה עלתה'] || '');
                     } else { // Fallback for old data
-                        containersText = order['מספרי מכולות'] || '';
+                        containersText = String(order['מספרי מכולות'] || '');
                     }
                     row.insertCell().textContent = containersText;
                     row.insertCell().textContent = order['הערות'] || '';
@@ -2199,12 +2188,12 @@
             
             let containersDisplay = '';
             if (orderData['סוג פעולה'] === 'הורדה') {
-                containersDisplay = orderData['מספר מכולה ירדה'] || orderData['מספרי מכולות'] || '';
+                containersDisplay = String(orderData['מספר מכולה ירדה'] || orderData['מספרי מכולות'] || '');
             } else if (orderData['סוג פעולה'] === 'העלאה') {
-                containersDisplay = orderData['מספר מכולה עלתה'] || orderData['מספרי מכולות'] || '';
+                containersDisplay = String(orderData['מספר מכולה עלתה'] || orderData['מספרי מכולות'] || '');
             } else if (orderData['סוג פעולה'] === 'החלפה') {
-                const taken = orderData['מספר מכולה ירדה'] || '';
-                const brought = orderData['מספר מכולה עלתה'] || '';
+                const taken = String(orderData['מספר מכולה ירדה'] || '');
+                const brought = String(orderData['מספר מכולa עלתה'] || '');
                 if (taken && brought) {
                     containersDisplay = `ירדה: ${taken}, עלתה: ${brought}`;
                 } else if (taken) {
@@ -2213,7 +2202,7 @@
                     containersDisplay = `עלתה: ${brought}`;
                 }
             } else {
-                containersDisplay = orderData['מספרי מכולות'] || ''; // Fallback for older orders
+                containersDisplay = String(orderData['מספרי מכולות'] || ''); // Fallback for older orders
             }
 
             orderCard.innerHTML = `
@@ -2302,9 +2291,9 @@
                     row.insertCell().textContent = order['סוג פעולה'] || '';
                     
                     // Display 'ירדה' container
-                    row.insertCell().textContent = order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '';
+                    row.insertCell().textContent = String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '');
                     // Display 'עלתה' container
-                    row.insertCell().textContent = order['מספר מכולה עלתה'] || '';
+                    row.insertCell().textContent = String(order['מספר מכולה עלתה'] || '');
 
                     row.insertCell().innerHTML = `<span class="${order['סטטוס'] === 'פתוח' ? 'status-open' : order['סטטוס'] === 'חורג' ? 'status-overdue' : 'status-closed'}">${order['סטטוס'] || ''}</span>`;
                     row.insertCell().textContent = order['ימים שעברו'] || '';
@@ -2328,10 +2317,10 @@
 
             const containerHistory = allOrders.filter(order =>
                 // Check both new container fields
-                (order['מספר מכולה ירדה'] || '').toString().split(',').map(c => c.trim()).includes(containerNum.trim()) ||
-                (order['מספר מכולה עלתה'] || '').toString().split(',').map(c => c.trim()).includes(containerNum.trim()) ||
+                (String(order['מספר מכולה ירדה'] || '')).split(',').map(c => c.trim()).includes(containerNum.trim()) ||
+                (String(order['מספר מכולה עלתה'] || '')).split(',').map(c => c.trim()).includes(containerNum.trim()) ||
                 // Keep compatibility with old 'מספרי מכולות' field
-                (order['מספרי מכולות'] || '').toString().split(',').map(c => c.trim()).includes(containerNum.trim())
+                (String(order['מספרי מכולות'] || '')).split(',').map(c => c.trim()).includes(containerNum.trim())
             ).sort((a, b) => new Date(a['תאריך הזמנה']) - new Date(b['תאריך הזמנה'])); // מיין מהישן לחדש
 
             if (containerHistory.length === 0) {
@@ -2345,8 +2334,8 @@
                     row.insertCell().textContent = order['סוג פעולה'] || '';
                     
                     // Display relevant container number based on action type
-                    row.insertCell().textContent = order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '';
-                    row.insertCell().textContent = order['מספר מכולה עלתה'] || '';
+                    row.insertCell().textContent = String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '');
+                    row.insertCell().textContent = String(order['מספר מכולה עלתה'] || '');
 
 
                     let statusClass = '';
@@ -2412,8 +2401,8 @@
             });
 
             sortedOrders.forEach(order => {
-                const containersTaken = (order['מספר מכולה ירדה'] || '').toString().split(',').map(c => c.trim()).filter(c => c);
-                const containersBrought = (order['מספר מכולה עלתה'] || '').toString().split(',').map(c => c.trim()).filter(c => c);
+                const containersTaken = (String(order['מספר מכולה ירדה'] || '')).split(',').map(c => c.trim()).filter(c => c);
+                const containersBrought = (String(order['מספר מכולה עלתה'] || '')).split(',').map(c => c.trim()).filter(c => c);
                 const orderDate = new Date(order['תאריך הזמנה']);
 
                 // Process containers that are taken out (become "בשימוש")
@@ -2464,9 +2453,9 @@
             // Collect all unique container numbers from both new fields and the old one
             const allContainerNumbers = new Set(allOrders.flatMap(order => {
                 let containers = [];
-                if (order['מספר מכולה ירדה']) containers = containers.concat((order['מספר מכולה ירדה']).toString().split(',').map(c => c.trim()).filter(c => c));
-                if (order['מספר מכולה עלתה']) containers = containers.concat((order['מספר מכולה עלתה']).toString().split(',').map(c => c.trim()).filter(c => c));
-                if (order['מספרי מכולות']) containers = containers.concat((order['מספרי מכולות']).toString().split(',').map(c => c.trim()).filter(c => c)); // For backward compatibility
+                if (order['מספר מכולה ירדה']) containers = containers.concat((String(order['מספר מכולה ירדה'])).split(',').map(c => c.trim()).filter(c => c));
+                if (order['מספר מכולה עלתה']) containers = containers.concat((String(order['מספר מכולה עלתה'])).split(',').map(c => c.trim()).filter(c => c));
+                if (order['מספרי מכולות']) containers = containers.concat((String(order['מספרי מכולות'])).split(',').map(c => c.trim()).filter(c => c)); // For backward compatibility
                 return containers;
             }));
 
@@ -2575,14 +2564,14 @@
                     let containerNumbersForHistory = [];
 
                     if (order['סוג פעולה'] === 'הורדה') {
-                        containersToDisplay = order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '';
+                        containersToDisplay = String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '');
                         containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
                     } else if (order['סוג פעולה'] === 'העלאה') {
-                        containersToDisplay = order['מספר מכולה עלתה'] || order['מספרי מכולות'] || '';
+                        containersToDisplay = String(order['מספר מכולה עלתה'] || order['מספרי מכולות'] || '');
                         containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
                     } else if (order['סוג פעולה'] === 'החלפה') {
-                        const taken = order['מספר מכולה ירדה'] || '';
-                        const brought = order['מספר מכולה עלתה'] || '';
+                        const taken = String(order['מספר מכולה ירדה'] || '');
+                        const brought = String(order['מספר מכולה עלתה'] || '');
                         if (taken && brought) {
                             containersToDisplay = `ירדה: ${taken}, עלתה: ${brought}`;
                             containerNumbersForHistory = [taken, brought].map(c => c.trim()).filter(c => c);
@@ -2594,7 +2583,7 @@
                             containerNumbersForHistory = [brought].map(c => c.trim()).filter(c => c);
                         }
                     } else { // Fallback for old data or other types
-                        containersToDisplay = order['מספרי מכולות'] || '';
+                        containersToDisplay = String(order['מספרי מכולות'] || '');
                         containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
                     }
 
@@ -2602,8 +2591,8 @@
                         containersCell.innerHTML = containerNumbersForHistory.map(containerNum => {
                             let displayPrefix = '';
                             if (order['סוג פעולה'] === 'החלפה') {
-                                if ((order['מספר מכולה ירדה'] || '').includes(containerNum)) displayPrefix = 'ירדה: ';
-                                if ((order['מספר מכולה עלתה'] || '').includes(containerNum)) displayPrefix = 'עלתה: ';
+                                if ((String(order['מספר מכולה ירדה'] || '')).includes(containerNum)) displayPrefix = 'ירדה: ';
+                                if ((String(order['מספר מכולה עלתה'] || '')).includes(containerNum)) displayPrefix = 'עלתה: ';
                             }
                             return `
                                 <span class="text-blue-700 underline cursor-pointer hover:text-blue-900"
