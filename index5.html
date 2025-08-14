@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת CRM לניהול מכולות מתקדם</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                        secondary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        },
+                        danger: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            200: '#fecaca',
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                        },
+                        dark: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+                        'glass-inset': 'inset 0 0 10px rgba(255, 255, 255, 0.2)',
+                        'neumorphic': '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                        'neumorphic-inset': 'inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-primary: 139, 92, 246;
+            --color-secondary: 14, 165, 233;
+            --color-accent: 16, 185, 129;
+            --color-warning: 245, 158, 11;
+            --color-danger: 239, 68, 68;
+            --color-dark: 15, 23, 42;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            direction: rtl;
+            text-align: right;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        /* Glassmorphism Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: rgb(var(--color-primary));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: rgba(var(--color-primary), 0.9);
+            box-shadow: 0 4px 12px rgba(var(--color-primary), 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: rgb(var(--color-secondary));
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(var(--color-secondary), 0.9);
+            box-shadow: 0 4px 12px rgba(var(--color-secondary), 0.3);
+        }
+        
+        .btn-accent {
+            background-color: rgb(var(--color-accent));
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            background-color: rgba(var(--color-accent), 0.9);
+            box-shadow: 0 4px 12px rgba(var(--color-accent), 0.3);
+        }
+        
+        .btn-warning {
+            background-color: rgb(var(--color-warning));
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: rgba(var(--color-warning), 0.9);
+            box-shadow: 0 4px 12px rgba(var(--color-warning), 0.3);
+        }
+        
+        .btn-danger {
+            background-color: rgb(var(--color-danger));
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: rgba(var(--color-danger), 0.9);
+            box-shadow: 0 4px 12px rgba(var(--color-danger), 0.3);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid currentColor;
+            color: rgb(var(--color-primary));
+        }
+        
+        .dark .btn-outline {
+            color: rgb(var(--color-secondary));
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(var(--color-primary), 0.1);
+        }
+        
+        .dark .btn-outline:hover {
+            background-color: rgba(var(--color-secondary), 0.1);
+        }
+        
+        /* Inputs */
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            background-color: rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .dark .input-field {
+            background-color: rgba(15, 23, 42, 0.7);
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: rgb(var(--color-primary));
+            box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.2);
+        }
+        
+        .dark .input-field:focus {
+            border-color: rgb(var(--color-secondary));
+            box-shadow: 0 0 0 3px rgba(var(--color-secondary), 0.2);
+        }
+        
+        /* Tables */
+        .table-container {
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .table th {
+            background-color: rgba(var(--color-primary), 0.1);
+            color: rgb(var(--color-primary));
+            padding: 1rem;
+            text-align: right;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .dark .table th {
+            background-color: rgba(15, 23, 42, 0.8);
+            color: rgb(var(--color-secondary));
+            border-bottom-color: #334155;
+        }
+        
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .dark .table td {
+            border-bottom-color: #334155;
+        }
+        
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table tr:hover td {
+            background-color: rgba(var(--color-primary), 0.05);
+        }
+        
+        .dark .table tr:hover td {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+        
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-primary {
+            background-color: rgba(var(--color-primary), 0.1);
+            color: rgb(var(--color-primary));
+        }
+        
+        .badge-secondary {
+            background-color: rgba(var(--color-secondary), 0.1);
+            color: rgb(var(--color-secondary));
+        }
+        
+        .badge-accent {
+            background-color: rgba(var(--color-accent), 0.1);
+            color: rgb(var(--color-accent));
+        }
+        
+        .badge-warning {
+            background-color: rgba(var(--color-warning), 0.1);
+            color: rgb(var(--color-warning));
+        }
+        
+        .badge-danger {
+            background-color: rgba(var(--color-danger), 0.1);
+            color: rgb(var(--color-danger));
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .animate-fade {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.5);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgb(var(--color-primary));
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--color-primary), 0.8);
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgb(var(--color-secondary));
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--color-secondary), 0.8);
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: rgb(var(--color-primary));
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dashboard-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .dashboard-card:hover::after {
+            opacity: 1;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 1rem;
+            }
+            
+            .table th, .table td {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark-900">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header with Theme Toggle -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <i class="fas fa-boxes text-3xl text-primary-500 mr-3"></i>
+                <h1 class="text-2xl font-bold text-dark-800 dark:text-white">ניהול מכולות מתקדם</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-dark-600 dark:text-dark-300">מצב כהה</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </header>
+        
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glass-card dashboard-card p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-dark-500 dark:text-dark-400">הזמנות פתוחות</p>
+                        <h3 class="text-3xl font-bold text-primary-600 dark:text-primary-400 mt-2">24</h3>
+                    </div>
+                    <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300">
+                        <i class="fas fa-box-open text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-dark-400 dark:text-dark-500 mt-4"><i class="fas fa-arrow-up text-green-500 mr-1"></i> 12% מהחודש שעבר</p>
+            </div>
+            
+            <div class="glass-card dashboard-card p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-dark-500 dark:text-dark-400">מכולות פעילות</p>
+                        <h3 class="text-3xl font-bold text-secondary-600 dark:text-secondary-400 mt-2">18</h3>
+                    </div>
+                    <div class="p-3 rounded-full bg-secondary-100 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-300">
+                        <i class="fas fa-shipping-fast text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-dark-400 dark:text-dark-500 mt-4"><i class="fas fa-arrow-down text-red-500 mr-1"></i> 5% מהחודש שעבר</p>
+            </div>
+            
+            <div class="glass-card dashboard-card p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-dark-500 dark:text-dark-400">לקוחות פעילים</p>
+                        <h3 class="text-3xl font-bold text-accent-600 dark:text-accent-400 mt-2">15</h3>
+                    </div>
+                    <div class="p-3 rounded-full bg-accent-100 dark:bg-accent-900/30 text-accent-600 dark:text-accent-300">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-dark-400 dark:text-dark-500 mt-4"><i class="fas fa-arrow-up text-green-500 mr-1"></i> 8% מהחודש שעבר</p>
+            </div>
+            
+            <div class="glass-card dashboard-card p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-dark-500 dark:text-dark-400">התראות</p>
+                        <h3 class="text-3xl font-bold text-warning-600 dark:text-warning-400 mt-2">3</h3>
+                    </div>
+                    <div class="p-3 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-300">
+                        <i class="fas fa-exclamation-triangle text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-dark-400 dark:text-dark-500 mt-4"><i class="fas fa-arrow-down text-red-500 mr-1"></i> 2 מהשבוע שעבר</p>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap justify-end gap-4 mb-8">
+            <button class="btn btn-primary">
+                <i class="fas fa-plus ml-2"></i> הוסף הזמנה חדשה
+            </button>
+            <button class="btn btn-outline">
+                <i class="fas fa-filter ml-2"></i> סינון מתקדם
+            </button>
+            <button class="btn btn-secondary">
+                <i class="fas fa-file-export ml-2"></i> יצא דוח
+            </button>
+        </div>
+        
+        <!-- Orders Table -->
+        <div class="glass-card p-6 mb-8 animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-dark-800 dark:text-white">הזמנות אחרונות</h2>
+                <div class="relative">
+                    <input type="text" placeholder="חיפוש הזמנות..." class="input-field pl-10">
+                    <i class="fas fa-search absolute left-3 top-3 text-dark-400"></i>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>מספר הזמנה</th>
+                            <th>לקוח</th>
+                            <th>סוג פעולה</th>
+                            <th>תאריך</th>
+                            <th>מכולה</th>
+                            <th>סטטוס</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#12345</td>
+                            <td>חברה לדוגמה בע"מ</td>
+                            <td>הצבה</td>
+                            <td>12/05/2023</td>
+                            <td>CXRU456789</td>
+                            <td><span class="badge badge-accent">פעיל</span></td>
+                            <td>
+                                <button class="text-primary-500 hover:text-primary-700 dark:hover:text-primary-400 mr-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-400 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-danger-500 hover:text-danger-700 dark:hover:text-danger-400">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#12344</td>
+                            <td>עסקים משותפים בע"מ</td>
+                            <td>הוצאה</td>
+                            <td>10/05/2023</td>
+                            <td>TRHU987654</td>
+                            <td><span class="badge badge-primary">בטיפול</span></td>
+                            <td>
+                                <button class="text-primary-500 hover:text-primary-700 dark:hover:text-primary-400 mr-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-400 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-danger-500 hover:text-danger-700 dark:hover:text-danger-400">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#12343</td>
+                            <td>יצרני מתכת בע"מ</td>
+                            <td>החלפה</td>
+                            <td>08/05/2023</td>
+                            <td>GATU123456</td>
+                            <td><span class="badge badge-secondary">הושלם</span></td>
+                            <td>
+                                <button class="text-primary-500 hover:text-primary-700 dark:hover:text-primary-400 mr-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-400 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-danger-500 hover:text-danger-700 dark:hover:text-danger-400">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#12342</td>
+                            <td>יבוא יצוא בינלאומי</td>
+                            <td>פינוי במקום</td>
+                            <td>05/05/2023</td>
+                            <td>MSKU654321</td>
+                            <td><span class="badge badge-warning">ממתין</span></td>
+                            <td>
+                                <button class="text-primary-500 hover:text-primary-700 dark:hover:text-primary-400 mr-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-400 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-danger-500 hover:text-danger-700 dark:hover:text-danger-400">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#12341</td>
+                            <td>מחסני לוגיסטיקה</td>
+                            <td>הצבה</td>
+                            <td>01/05/2023</td>
+                            <td>FSCU789012</td>
+                            <td><span class="badge badge-danger">בוטל</span></td>
+                            <td>
+                                <button class="text-primary-500 hover:text-primary-700 dark:hover:text-primary-400 mr-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-secondary-500 hover:text-secondary-700 dark:hover:text-secondary-400 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-danger-500 hover:text-danger-700 dark:hover:text-danger-400">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="flex justify-between items-center mt-6">
+                <div class="text-sm text-dark-500 dark:text-dark-400">
+                    מציג 1 עד 5 מתוך 24 רשומות
+                </div>
+                <div class="flex space-x-2">
+                    <button class="btn btn-outline px-3 py-1">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="btn btn-primary px-3 py-1">1</button>
+                    <button class="btn btn-outline px-3 py-1">2</button>
+                    <button class="btn btn-outline px-3 py-1">3</button>
+                    <button class="btn btn-outline px-3 py-1">4</button>
+                    <button class="btn btn-outline px-3 py-1">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-semibold text-dark-800 dark:text-white mb-4">חלוקת סוגי פעולות</h2>
+                <div class="h-80">
+                    <canvas id="actionTypesChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-semibold text-dark-800 dark:text-white mb-4">הזמנות לפי חודש</h2>
+                <div class="h-80">
+                    <canvas id="monthlyOrdersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        
+        // Check for saved user preference or use system preference
+        const savedTheme = localStorage.getItem('theme') || 
+                          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        
+        // Apply the saved theme
+        if (savedTheme === 'dark') {
+            htmlElement.classList.add('dark');
+            themeToggle.checked = true;
+        } else {
+            htmlElement.classList.remove('dark');
+            themeToggle.checked = false;
+        }
+        
+        // Toggle theme on switch
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Action Types Chart
+            const actionCtx = document.getElementById('actionTypesChart').getContext('2d');
+            const actionTypesChart = new Chart(actionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['הצבה', 'הוצאה', 'החלפה', 'פינוי במקום'],
+                    datasets: [{
+                        data: [35, 25, 20, 20],
+                        backgroundColor: [
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(14, 165, 233, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(14, 165, 233, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    family: 'Inter'
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            
+            // Monthly Orders Chart
+            const monthlyCtx = document.getElementById('monthlyOrdersChart').getContext('2d');
+            const monthlyOrdersChart = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני'],
+                    datasets: [{
+                        label: 'מספר הזמנות',
+                        data: [12, 19, 15, 22, 18, 25],
+                        backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
