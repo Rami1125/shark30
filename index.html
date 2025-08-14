@@ -1,85 +1,80 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he">
 <head>
-<link rel="icon" href="https://www.google.com/favicon.ico">
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>לוח מעקב מכולות — דשבורד</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>לוח בקרה - מעקב מכולות</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #333;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background-color: #555;
+      color: white;
+    }
+  </style>
 </head>
-<body dir="rtl">
-  <header class="topbar glass">
-    <div class="brand">📦 מכולות — לוח מעקב</div>
-    <div class="actions">
-      <button id="btnSites" class="btn">מכולות באתרים</button>
-      <button id="btnToggleClosed" class="btn">הצג סגורות</button>
-      <button id="btnAdd" class="btn primary">הוסף הזמנה</button>
-      <button id="btnRefresh" class="btn">רענן</button>
-    </div>
+<body>
+  <header>
+    <h1>לוח בקרה - מעקב מכולות</h1>
   </header>
-
-  <main class="container">
-    <section class="kpi-row">
-      <div class="card glass"> <div class="num" id="kpiOpen">—</div> <div class="label">פתוחות</div> </div>
-      <div class="card glass"> <div class="num" id="kpiOverdue">—</div> <div class="label">חורגות</div> </div>
-      <div class="card glass"> <div class="num" id="kpiSoon">—</div> <div class="label">יסגרו ב-3 ימים</div> </div>
-      <div class="card glass"> <div class="num" id="kpiDuplicates">—</div> <div class="label">כפילויות</div> </div>
-    </section>
-
-    <section id="alerts" class="alerts"></section>
-
-    <section class="table-wrap glass" id="tableWrap">
-      <table id="ordersTable">
-        <thead>
-          <tr>
-            <th>תאריך</th>
-            <th>תעודה</th>
-            <th>לקוח</th>
-            <th>כתובת</th>
-            <th>סוג פעולה</th>
-            <th>מכולה ירדה</th>
-            <th>מכולה עלתה</th>
-            <th>סטטוס</th>
-            <th>פעולות</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- Modal: Add / Edit -->
-    <div id="modal" class="modal hidden">
-      <div class="modal-content glass">
-        <button class="modal-close" id="modalClose">✕</button>
-        <h3 id="modalTitle">הוספת הזמנה</h3>
-        <form id="orderForm">
-          <div class="form-row"><label>תאריך</label><input name="date" type="date" required></div>
-          <div class="form-row"><label>תעודה</label><input name="doc" type="text" required></div>
-          <div class="form-row"><label>שם סוכן</label><input name="agent" type="text"></div>
-          <div class="form-row"><label>שם לקוח</label><input name="client" type="text" required></div>
-          <div class="form-row"><label>כתובת</label><input name="address" type="text"></div>
-          <div class="form-row"><label>סוג פעולה</label>
-            <select name="action_type">
-              <option>הצבה</option>
-              <option>החלפה</option>
-              <option>הוצאה</option>
-              <option>הזזה</option>
-              <option>פינוי</option>
-            </select>
-          </div>
-          <div class="form-row"><label>מס' מכולה ירדה</label><input name="container_out" type="text"></div>
-          <div class="form-row"><label>מס' מכולה עלתה</label><input name="container_in" type="text"></div>
-          <div class="form-row"><label>הערות</label><textarea name="notes"></textarea></div>
-          <div class="form-row actions-row"><button type="submit" class="btn primary">שמור</button></div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Popup area for history / warnings -->
-    <div id="popupArea"></div>
-
+  <main>
+    <table id="ordersTable">
+      <thead>
+        <tr>
+          <th>מתאריך</th>
+          <th>תעודה</th>
+          <th>שם סוכן</th>
+          <th>שם לקוח</th>
+          <th>כתובת</th>
+          <th>סוג פעולה</th>
+          <th>ימים שעברו</th>
+          <th>מס' מכולה ירדה</th>
+          <th>מס' מכולה עלתה</th>
+          <th>ימים שעברו (עלתה)</th>
+          <th>closed</th>
+          <th>הערות</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </main>
-
-  <script src="script.js"></script>
+  <script>
+    async function loadOrders() {
+      const response = await fetch('/exec?action=list');
+      const orders = await response.json();
+      const tbody = document.querySelector('#ordersTable tbody');
+      tbody.innerHTML = '';
+      orders.forEach(order => {
+        const tr = document.createElement('tr');
+        for (let key in order) {
+          const td = document.createElement('td');
+          td.textContent = order[key];
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+    }
+    loadOrders();
+  </script>
 </body>
 </html>
