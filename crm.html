@@ -711,7 +711,140 @@
             background-color: #FFFFFF;
             margin-bottom: 3rem;
         }
-        
+
+        /* --- New CSS for the request --- */
+
+        /* Style for container number "cube" */
+        .container-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3em 0.7em;
+            background-color: #60A5FA; /* Blue */
+            color: white;
+            border-radius: 8px; /* Slightly more rounded */
+            font-weight: 600;
+            font-size: 0.9em;
+            margin: 0 0.2em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer; /* Indicate it's clickable */
+            border: 1px solid rgba(255,255,255,0.2);
+            gap: 0.3em;
+        }
+
+        .container-pill .fas {
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .container-pill:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            background-color: #3B82F6; /* Darker blue on hover */
+        }
+
+        .container-pill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); /* Shine effect */
+        }
+
+        .container-pill:hover::before {
+            left: 100%;
+        }
+
+        /* Row styling based on "סוג פעולה" */
+        .row-הורדה {
+            background-color: #ECFDF5 !important; /* Light Green */
+        }
+        .row-החלפה {
+            background-color: #FFFBEB !important; /* Light Yellow */
+        }
+        .row-העלאה {
+            background-color: #FEF2F2 !important; /* Light Red */
+        }
+        .row-ממתין-לא-תקין {
+            background-color: #EFF6FF !important; /* Light Blue */
+        }
+
+        /* Ensure higher priority for overdue/closed rows if they overlap */
+        .overdue-110-days {
+            background-color: #FDE2E2 !important; /* Slightly darker red for extreme overdue */
+        }
+        .closed-order-row {
+            background-color: #F3F4F6 !important; /* Slightly darker gray for closed */
+        }
+
+
+        /* Styles for new filter buttons */
+        .btn-filter {
+            padding: 0.7rem 1.4rem; /* Smaller padding for filter buttons */
+            border-radius: 10px; /* Slightly less rounded than main buttons */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-align: center;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            background-image: linear-gradient(to right, #6D28D9, #8B5CF6); /* Default purple for general filter */
+            color: #FFFFFF;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+        }
+
+        .btn-filter:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+        }
+        .btn-filter::before { /* Shine effect */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .btn-filter:hover::before {
+            left: 100%;
+        }
+
+        /* Specific colors for filter buttons */
+        .btn-filter-pickup {
+            background-image: linear-gradient(to right, #34D399, #10B981); /* Greenish for הורדה */
+        }
+        .btn-filter-exchange {
+            background-image: linear-gradient(to right, #FCD34D, #FBBF24); /* Yellow for החלפה */
+            color: #4B5563; /* Darker text for yellow background */
+        }
+        .btn-filter-return {
+            background-image: linear-gradient(to right, #EF4444, #DC2626); /* Red for העלאה */
+        }
+        .btn-filter-pending {
+            background-image: linear-gradient(to right, #60A5FA, #3B82F6); /* Blue for ממתין/לא תקין */
+        }
+
+        /* Ensure buttons don't wrap too aggressively */
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+        .flex-wrap > .btn {
+            margin-bottom: 0.5rem; /* Space between buttons when wrapping */
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -974,6 +1107,24 @@
                         </button>
                         <button class="btn btn-secondary" onclick="refreshData()">
                             <i class="fas fa-sync-alt ml-2"></i> רענן נתונים
+                        </button>
+                    </div>
+                     <!-- New filter buttons -->
+                    <div class="flex flex-wrap gap-3 mt-4 md:mt-0">
+                        <button class="btn-filter btn-filter-pickup" onclick="filterTable(null, 'הורדה')">
+                            <i class="fas fa-truck-loading ml-2"></i> הזמנות הורדה
+                        </button>
+                        <button class="btn-filter btn-filter-exchange" onclick="filterTable(null, 'החלפה')">
+                            <i class="fas fa-exchange-alt ml-2"></i> הזמנות החלפה
+                        </button>
+                        <button class="btn-filter btn-filter-return" onclick="filterTable(null, 'העלאה')">
+                            <i class="fas fa-truck-ramp-box ml-2"></i> הזמנות העלאה
+                        </button>
+                        <button class="btn-filter btn-filter-pending" onclick="filterTable('ממתין/לא תקין', null)">
+                            <i class="fas fa-hourglass-half ml-2"></i> הזמנות ממתינות
+                        </button>
+                        <button class="btn-filter btn-secondary" onclick="resetFilters()">
+                            <i class="fas fa-undo ml-2"></i> אפס סינון
                         </button>
                     </div>
                 </div>
@@ -1301,15 +1452,28 @@
                 row.style.cursor = 'pointer'; // הופך את השורה ללחיצה
                 row.onclick = () => showOrderDetails(order); // מפעיל מודאל פרטי הזמנה
 
-                // סגנון לשורות סגורות
+                // Row styling based on "סוג פעולה" and "סטטוס" - prioritize specific statuses
+                let rowActionClass = '';
                 if (order['סטטוס'] === 'סגור') {
-                    row.classList.add('closed-order-row');
+                    rowActionClass = 'closed-order-row';
+                } else if (order['סטטוס'] !== 'סגור' && order['ימים שעברו'] && parseInt(order['ימים שעברו']) > 110) {
+                    rowActionClass = 'overdue-110-days';
+                } else {
+                    switch (order['סוג פעולה']) {
+                        case 'הורדה': rowActionClass = 'row-הורדה'; break;
+                        case 'החלפה': rowActionClass = 'row-החלפה'; break;
+                        case 'העלאה': rowActionClass = 'row-העלאה'; break;
+                        default:
+                            if (order['סטטוס'] === 'ממתין/לא תקין') {
+                                rowActionClass = 'row-ממתין-לא-תקין';
+                            }
+                            break;
+                    }
+                }
+                if (rowActionClass) {
+                    row.classList.add(rowActionClass);
                 }
 
-                // סגנון לשורות חורגות 110 ימים
-                if (order['סטטוס'] !== 'סגור' && order['ימים שעברו'] && parseInt(order['ימים שעברו']) > 110) {
-                    row.classList.add('overdue-110-days');
-                }
 
                 row.insertCell().textContent = formatDate(order['תאריך הזמנה']);
                 const docIdCell = row.insertCell();
@@ -1329,6 +1493,7 @@
                 let containersToDisplay = '';
                 let containerNumbersForHistory = []; // To collect all container numbers for click events
 
+                // Determine containers to display based on action type
                 if (order['סוג פעולה'] === 'הורדה') {
                     containersToDisplay = String(order['מספר מכולה ירדה'] || order['מספרי מכולות'] || '');
                     containerNumbersForHistory = containersToDisplay.split(',').map(c => c.trim()).filter(c => c);
@@ -1357,13 +1522,13 @@
                     containersCell.innerHTML = containerNumbersForHistory.map(containerNum => {
                         let displayPrefix = '';
                         if (order['סוג פעולה'] === 'החלפה') {
-                            if ((order['מספר מכולה ירדה'] || '').includes(containerNum)) displayPrefix = 'ירדה: ';
-                            if ((order['מספר מכולה עלתה'] || '').includes(containerNum)) displayPrefix = 'עלתה: ';
+                            if ((String(order['מספר מכולה ירדה'] || '')).includes(containerNum)) displayPrefix = 'ירדה: ';
+                            if ((String(order['מספר מכולה עלתה'] || '')).includes(containerNum)) displayPrefix = 'עלתה: ';
                         }
                         return `
-                            <span class="text-blue-600 underline cursor-pointer hover:text-blue-800"
+                            <span class="container-pill"
                                   onclick="event.stopPropagation(); openContainerHistoryModal('${containerNum}')">
-                                ${displayPrefix}${containerNum}
+                                <i class="fas fa-box"></i> ${displayPrefix}${containerNum}
                             </span>
                         `;
                     }).join(', ');
@@ -1755,11 +1920,20 @@
 
         /**
          * מסנן את הטבלה לפי קלט חיפוש וסינון.
+         * @param {string} [statusFilterParam] סטטוס לסינון (אופציונלי, יחליף את ערך הסלקט).
+         * @param {string} [actionTypeFilterParam] סוג פעולה לסינון (אופציונלי, יחליף את ערך הסלקט).
          */
-        function filterTable() {
+        function filterTable(statusFilterParam = null, actionTypeFilterParam = null) {
             const searchText = document.getElementById('search-input').value.toLowerCase();
-            const filterStatus = document.getElementById('filter-status').value;
-            const filterActionType = document.getElementById('filter-action-type').value;
+            
+            // השתמש בפרמטרים אם סופקו, אחרת בערכי הסלקט הקיימים
+            const filterStatus = statusFilterParam !== null ? statusFilterParam : document.getElementById('filter-status').value;
+            const filterActionType = actionTypeFilterParam !== null ? actionTypeFilterParam : document.getElementById('filter-action-type').value;
+
+            // עדכן את הסלקטים כדי לשקף את הסינון הנוכחי (מכפתורים או ישירות)
+            document.getElementById('filter-status').value = filterStatus;
+            document.getElementById('filter-action-type').value = filterActionType;
+
 
             const filtered = allOrders.filter(order => {
                 const matchesSearch =
@@ -1767,8 +1941,8 @@
                     (order['תעודה'] || '').toLowerCase().includes(searchText) ||
                     (order['כתובת'] || '').toLowerCase().includes(searchText) ||
                     (order['הערות'] || '').toLowerCase().includes(searchText) ||
-                    (String(order['מספר מכולה ירדה'] || '')).toLowerCase().includes(searchText) || // Check new field with explicit String()
-                    (String(order['מספר מכולה עלתה'] || '')).toLowerCase().includes(searchText); // Check new field with explicit String()
+                    (String(order['מספר מכולה ירדה'] || '')).toLowerCase().includes(searchText) || 
+                    (String(order['מספר מכולה עלתה'] || '')).toLowerCase().includes(searchText);
 
 
                 const matchesStatus = filterStatus === 'all' || order['סטטוס'] === filterStatus;
@@ -1778,6 +1952,16 @@
             });
 
             renderOrdersTable(filtered);
+        }
+
+        /**
+         * מאפס את כל המסננים בטבלה.
+         */
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-status').value = 'all';
+            document.getElementById('filter-action-type').value = 'all';
+            filterTable(); // הפעל סינון מחדש עם מסננים מאופסים
         }
 
         /**
@@ -2217,7 +2401,7 @@
                 <p><i class="fas fa-hourglass-half icon"></i> <strong>ימים שעברו:</strong> ${orderData['ימים שעברו'] !== undefined ? orderData['ימים שעברו'] : ''}</p>
                 <p><i class="fas fa-calendar-check icon"></i> <strong>תאריך סיום צפוי:</strong> ${formatDate(orderData['תאריך סיום צפוי'])}</p>
                 <p><i class="fas fa-comment-dots icon"></i> <strong>הערות:</strong> ${orderData['הערות'] || ''}</p>
-                <p><i class="fas fa-calendar-times icon"></i> <strong>תאריך סגירה:</strong> ${formatDate(orderData['תאריך סגירה'])}</p>
+                <p><i class="fas fa-calendar-times icon"></i> <strong>תאריך סגירה:</strong> ${formatData(orderData['תאריך סגירה'])}</p>
                 <p><i class="fas fa-history icon"></i> <strong>הערות סיום:</strong> ${orderData['הערות סיום'] || ''}</p>
             `;
 
@@ -2595,9 +2779,9 @@
                                 if ((String(order['מספר מכולה עלתה'] || '')).includes(containerNum)) displayPrefix = 'עלתה: ';
                             }
                             return `
-                                <span class="text-blue-700 underline cursor-pointer hover:text-blue-900"
+                                <span class="container-pill"
                                     onclick="event.stopPropagation(); openContainerHistoryModal('${containerNum}')">
-                                    ${displayPrefix}${containerNum}
+                                    <i class="fas fa-box"></i> ${displayPrefix}${containerNum}
                                 </span>
                             `;
                         }).join(', ');
