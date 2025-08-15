@@ -85,6 +85,7 @@
             background-image: linear-gradient(to right, #6D28D9, #8B5CF6); /* סגול לבנדר (ברירת מחדל) */
             color: #FFFFFF;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* צל בסיסי */
+            min-width: 140px; /* גודל אחיד לכפתורים הראשיים */
         }
 
         .btn:before {
@@ -178,30 +179,33 @@
             border-collapse: separate; /* מאפשר border-spacing */
             border-spacing: 0; /* מרווח בין תאים */
             background-color: #FFFFFF;
-            min-width: 900px; /* רוחב מינימלי לטבלה כדי למנוע הידחסות */
+            min-width: 800px; /* רוחב מינימלי לטבלה כדי למנוע הידחסות */
         }
 
+        /* New: Glossy black square border for cells */
         th, td {
-            padding: 1.2rem 1.5rem; /* פאדינג נוח יותר לתאים */
+            padding: 1.2rem 1.5rem;
             text-align: right;
-            border-bottom: 1px solid #EDF2F7; /* קו הפרדה דק ובהיר בין שורות */
-            white-space: nowrap; /* מונע שבירת שורות */
+            border: 1px solid rgba(0, 0, 0, 0.8); /* Black border with slight transparency for gloss */
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); /* Inner shadow for glossy effect */
+            white-space: nowrap;
             position: relative;
-            font-weight: 500; /* עובי פונט רגיל */
+            font-weight: 500;
             color: #4B5563;
         }
+        
         td {
-            font-size: 0.98rem; /* פונט קצת גדול יותר */
+            font-size: 0.98rem;
         }
 
         th {
-            background-color: #F4F7FB; /* רקע כותרות בהיר */
-            font-weight: 700; /* מודגש יותר */
-            color: #2F435F; /* כחול כהה יותר לכותרות */
+            background-color: #F4F7FB;
+            font-weight: 700;
+            color: #2F435F;
             position: sticky;
             top: 0;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* צל קל לכותרות */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         /* אפקט ריחוף (אבק ריחוף) על תאי טבלה */
@@ -214,7 +218,7 @@
         }
 
         tr:last-child td {
-            border-bottom: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.8); /* Ensure bottom border for last row */
         }
 
         tr:nth-child(even) {
@@ -802,6 +806,7 @@
             color: #FFFFFF;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
             font-size: 0.95rem;
+            min-width: 120px; /* גודל אחיד יותר לכפתורי פילטר */
         }
 
         .btn-filter:hover {
@@ -843,6 +848,17 @@
         }
         .flex-wrap > .btn {
             margin-bottom: 0.5rem; /* Space between buttons when wrapping */
+        }
+        /* Style for the new export buttons pop-up */
+        .export-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            align-items: center;
+        }
+        .export-buttons-container .btn {
+            min-width: 180px; /* Ensure these buttons are also of a reasonable size */
         }
 
     </style>
@@ -1009,8 +1025,8 @@
                                 <th>תאריך הזמנה</th>
                                 <th>תעודה</th>
                                 <th>סוג פעולה</th>
-                                <th>מספר מכולה ירדה</th> <!-- Updated header -->
-                                <th>מספר מכולה עלתה</th> <!-- New header -->
+                                <th>מספר מכולה ירדה</th>
+                                <th>מספר מכולה עלתה</th>
                                 <th>סטטוס</th>
                                 <th>ימים שעברו</th>
                                 <th>תאריך סגירה</th>
@@ -1042,8 +1058,8 @@
                             <th>תעודה</th>
                             <th>שם לקוח</th>
                             <th>סוג פעולה</th>
-                            <th>מספר מכולה ירדה</th> <!-- Updated header -->
-                            <th>מספר מכולה עלתה</th> <!-- New header -->
+                            <th>מספר מכולה ירדה</th>
+                            <th>מספר מכולה עלתה</th>
                             <th>סטטוס הזמנה</th>
                             <th>תאריך סיום צפוי</th>
                         </tr>
@@ -1056,6 +1072,48 @@
             </div>
             <div class="flex justify-end mt-4">
                 <button class="btn btn-secondary" onclick="closeContainerHistoryModal()">סגור</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New: Modal for Containers on Sites -->
+    <div id="containers-on-site-modal" class="modal-overlay">
+        <div class="modal-content modal-full-width">
+            <button class="modal-close-btn" onclick="closeContainersOnSiteModal()"><i class="fas fa-times"></i></button>
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">מכולות באתרים</h2>
+            <div class="modal-body table-container">
+                <table id="containers-on-site-table" class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th>שם לקוח</th>
+                            <th>כתובת</th>
+                            <th>מכולות בשימוש פעיל</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Containers data will be loaded here -->
+                    </tbody>
+                </table>
+                <p id="no-active-containers-msg" class="text-center text-gray-500 mt-4 hidden">אין מכולות פעילות כרגע באתרים.</p>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button class="btn btn-secondary" onclick="closeContainersOnSiteModal()">סגור</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New: Modal for Export Actions -->
+    <div id="export-actions-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="closeExportActionsModal()"><i class="fas fa-times"></i></button>
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">פעולות ייצוא והדפסה</h2>
+            <div class="export-buttons-container">
+                <button class="btn btn-secondary" onclick="printTable()">
+                    <i class="fas fa-print ml-2"></i> הדפס טבלה
+                </button>
+                <button class="btn btn-secondary" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel ml-2"></i> יצא לאקסל
+                </button>
             </div>
         </div>
     </div>
@@ -1091,42 +1149,24 @@
             <!-- דאשבורד וטבלת הזמנות -->
             <section id="dashboard-page" class="page-content main-content-wrapper">
                 <!-- כפתורים עליונים -->
-                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div class="flex flex-wrap gap-3">
-                        <button class="btn btn-primary" onclick="openOrderModal('add')">
-                            <i class="fas fa-plus-circle ml-2"></i> הוסף הזמנה חדשה
-                        </button>
-                        <button class="btn btn-danger" id="overdue-customers-btn" onclick="openOverdueCustomersModal()">
-                            <i class="fas fa-hand-paper ml-2"></i> לקוחות חורגים לטיפול <span id="overdue-customers-badge" class="mr-2 bg-white text-red-600 px-2 py-1 rounded-full text-xs font-bold">0</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="printTable()">
-                            <i class="fas fa-print ml-2"></i> הדפס טבלה
-                        </button>
-                        <button class="btn btn-secondary" onclick="exportToExcel()">
-                            <i class="fas fa-file-excel ml-2"></i> יצא לאקסל
-                        </button>
-                        <button class="btn btn-secondary" onclick="refreshData()">
-                            <i class="fas fa-sync-alt ml-2"></i> רענן נתונים
-                        </button>
-                    </div>
-                     <!-- New filter buttons -->
-                    <div class="flex flex-wrap gap-3 mt-4 md:mt-0">
-                        <button class="btn-filter btn-filter-pickup" onclick="filterTable(null, 'הורדה')">
-                            <i class="fas fa-truck-loading ml-2"></i> הזמנות הורדה
-                        </button>
-                        <button class="btn-filter btn-filter-exchange" onclick="filterTable(null, 'החלפה')">
-                            <i class="fas fa-exchange-alt ml-2"></i> הזמנות החלפה
-                        </button>
-                        <button class="btn-filter btn-filter-return" onclick="filterTable(null, 'העלאה')">
-                            <i class="fas fa-truck-ramp-box ml-2"></i> הזמנות העלאה
-                        </button>
-                        <button class="btn-filter btn-filter-pending" onclick="filterTable('ממתין/לא תקין', null)">
-                            <i class="fas fa-hourglass-half ml-2"></i> הזמנות ממתינות
-                        </button>
-                        <button class="btn-filter btn-secondary" onclick="resetFilters()">
-                            <i class="fas fa-undo ml-2"></i> אפס סינון
-                        </button>
-                    </div>
+                <div class="flex flex-col md:flex-row justify-center items-center mb-8 gap-4 flex-wrap">
+                    <button class="btn btn-primary" onclick="openOrderModal('add')">
+                        <i class="fas fa-plus-circle ml-2"></i> הוסף הזמנה חדשה
+                    </button>
+                    <button class="btn btn-danger" id="overdue-customers-btn" onclick="openOverdueCustomersModal()">
+                        <i class="fas fa-hand-paper ml-2"></i> לקוחות חורגים לטיפול <span id="overdue-customers-badge" class="mr-2 bg-white text-red-600 px-2 py-1 rounded-full text-xs font-bold">0</span>
+                    </button>
+                    <!-- New button for "Containers on Sites" -->
+                    <button class="btn btn-primary" onclick="openContainersOnSiteModal()">
+                        <i class="fas fa-map-marked-alt ml-2"></i> מכולות באתרים
+                    </button>
+                    <!-- New button for "Export Actions" -->
+                    <button class="btn btn-secondary" onclick="openExportActionsModal()">
+                        <i class="fas fa-cogs ml-2"></i> פעולות ייצוא
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt ml-2"></i> רענן נתונים
+                    </button>
                 </div>
 
                 <!-- דאשבורד כרטיסיות -->
@@ -2377,7 +2417,7 @@
                 containersDisplay = String(orderData['מספר מכולה עלתה'] || orderData['מספרי מכולות'] || '');
             } else if (orderData['סוג פעולה'] === 'החלפה') {
                 const taken = String(orderData['מספר מכולה ירדה'] || '');
-                const brought = String(orderData['מספר מכולa עלתה'] || '');
+                const brought = String(order['מספר מכולה עלתה'] || '');
                 if (taken && brought) {
                     containersDisplay = `ירדה: ${taken}, עלתה: ${brought}`;
                 } else if (taken) {
@@ -2401,7 +2441,7 @@
                 <p><i class="fas fa-hourglass-half icon"></i> <strong>ימים שעברו:</strong> ${orderData['ימים שעברו'] !== undefined ? orderData['ימים שעברו'] : ''}</p>
                 <p><i class="fas fa-calendar-check icon"></i> <strong>תאריך סיום צפוי:</strong> ${formatDate(orderData['תאריך סיום צפוי'])}</p>
                 <p><i class="fas fa-comment-dots icon"></i> <strong>הערות:</strong> ${orderData['הערות'] || ''}</p>
-                <p><i class="fas fa-calendar-times icon"></i> <strong>תאריך סגירה:</strong> ${formatData(orderData['תאריך סגירה'])}</p>
+                <p><i class="fas fa-calendar-times icon"></i> <strong>תאריך סגירה:</strong> ${formatDate(orderData['תאריך סגירה'])}</p>
                 <p><i class="fas fa-history icon"></i> <strong>הערות סיום:</strong> ${orderData['הערות סיום'] || ''}</p>
             `;
 
@@ -2862,6 +2902,137 @@
 
             document.getElementById('current-date').textContent = now.toLocaleDateString('he-IL', dateOptions);
             document.getElementById('current-time').textContent = now.toLocaleTimeString('he-IL', timeOptions);
+        }
+
+        /**
+         * פותח את Modal "מכולות באתרים" ומציג את המכולות הפעילות לפי לקוח.
+         */
+        function openContainersOnSiteModal() {
+            const modal = document.getElementById('containers-on-site-modal');
+            const tableBody = document.querySelector('#containers-on-site-table tbody');
+            const noActiveContainersMsg = document.getElementById('no-active-containers-msg');
+            tableBody.innerHTML = '';
+            noActiveContainersMsg.classList.add('hidden');
+
+            const customerActiveContainers = {}; // { 'Customer Name': { Address: '...', containers: ['CON1', 'CON2'] } }
+
+            allOrders.filter(order => order['סטטוס'] !== 'סגור' && order['סטטוס'] !== 'ממתין/לא תקין')
+                     .forEach(order => {
+                const customerName = order['שם לקוח'] || 'לא ידוע';
+                const address = order['כתובת'] || 'לא ידוע';
+                
+                if (!customerActiveContainers[customerName]) {
+                    customerActiveContainers[customerName] = { address: address, containers: new Set() };
+                } else if (!customerActiveContainers[customerName].address && address !== 'לא ידוע') {
+                    // Update address if it was 'לא ידוע' or empty before
+                    customerActiveContainers[customerName].address = address;
+                }
+
+                // Add containers taken by the customer in active orders
+                if (order['סוג פעולה'] === 'הורדה' || order['סוג פעולה'] === 'החלפה') {
+                    const containersTaken = (String(order['מספר מכולה ירדה'] || '')).split(',').map(c => c.trim()).filter(c => c);
+                    containersTaken.forEach(c => customerActiveContainers[customerName].containers.add(c));
+                }
+                // If a container was returned in an open "העלאה" order, it should NOT be on site.
+                // This complex logic is handled by updateContainerInventory's containerStates which tracks net status.
+                // For this specific table, we list containers that are explicitly 'taken' in *open* orders.
+                // To be precise about "on site", we need to cross-reference with global container status.
+                
+                // Let's rely on the containerStates from updateContainerInventory for accuracy.
+                // This means we need a way to link containerState to specific customers.
+            });
+
+            // Refine logic for `openContainersOnSiteModal` to accurately reflect `containers_on_site`
+            // based on the `containerStates` from `updateContainerInventory`.
+            const activeCustomerContainers = {}; // { 'Customer Name': { Address: '...', containers: [] } }
+            
+            // Re-evaluate container states to attribute them to customers more accurately
+            const customerToContainerMap = {}; // { 'customerName|address': { containerNum: 'status' } }
+
+            allOrders.forEach(order => {
+                const customerKey = `${(order['שם לקוח'] || '').trim()}|${(order['כתובת'] || '').trim()}`;
+                if (!customerToContainerMap[customerKey]) {
+                    customerToContainerMap[customerKey] = {};
+                }
+
+                const orderDate = new Date(order['תאריך הזמנה']);
+
+                // Mark containers taken by this order for this customer
+                const containersTaken = (String(order['מספר מכולה ירדה'] || '')).split(',').map(c => c.trim()).filter(c => c);
+                containersTaken.forEach(container => {
+                    // Only if the order is not closed, or this is the latest event
+                    if (order['סטטוס'] !== 'סגור' || (orderDate > (customerToContainerMap[customerKey][container]?.lastUpdate || new Date(0)))) {
+                        customerToContainerMap[customerKey][container] = { status: 'in_use', lastUpdate: orderDate, orderId: order['תעודה'] };
+                    }
+                });
+
+                // Mark containers returned by this order for this customer
+                const containersBrought = (String(order['מספר מכולה עלתה'] || '')).split(',').map(c => c.trim()).filter(c => c);
+                containersBrought.forEach(container => {
+                     if (order['סטטוס'] !== 'סגור' || (orderDate > (customerToContainerMap[customerKey][container]?.lastUpdate || new Date(0)))) {
+                         customerToContainerMap[customerKey][container] = { status: 'returned', lastUpdate: orderDate, orderId: order['תעודה'] };
+                     }
+                });
+            });
+
+            Object.entries(customerToContainerMap).forEach(([customerKey, containers]) => {
+                const [customerName, address] = customerKey.split('|');
+                let activeContainersForCustomer = [];
+                Object.entries(containers).forEach(([containerNum, state]) => {
+                    if (state.status === 'in_use') {
+                        // Further check if this container is *globally* in use and associated with this customer
+                        // This would require a more complex global container state.
+                        // For simplicity, assume if customer has it as 'in_use' from an open order, it's on site.
+                        activeContainersForCustomer.push(containerNum);
+                    }
+                });
+                if (activeContainersForCustomer.length > 0) {
+                    activeCustomerContainers[customerName] = { address, containers: activeContainersForCustomer };
+                }
+            });
+
+
+            const sortedCustomers = Object.keys(activeCustomerContainers).sort();
+
+            if (sortedCustomers.length === 0) {
+                noActiveContainersMsg.classList.remove('hidden');
+            } else {
+                sortedCustomers.forEach(customerName => {
+                    const customerData = activeCustomerContainers[customerName];
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = customerName;
+                    row.insertCell().textContent = customerData.address;
+                    const containersCell = row.insertCell();
+                    containersCell.innerHTML = customerData.containers.map(containerNum => `
+                        <span class="container-pill" onclick="event.stopPropagation(); openContainerHistoryModal('${containerNum}')">
+                            <i class="fas fa-box"></i> ${containerNum}
+                        </span>
+                    `).join(' ');
+                });
+            }
+
+            modal.classList.add('active');
+        }
+
+        /**
+         * סוגר את Modal "מכולות באתרים".
+         */
+        function closeContainersOnSiteModal() {
+            document.getElementById('containers-on-site-modal').classList.remove('active');
+        }
+
+        /**
+         * פותח את Modal "פעולות ייצוא והדפסה".
+         */
+        function openExportActionsModal() {
+            document.getElementById('export-actions-modal').classList.add('active');
+        }
+
+        /**
+         * סוגר את Modal "פעולות ייצוא והדפסה".
+         */
+        function closeExportActionsModal() {
+            document.getElementById('export-actions-modal').classList.remove('active');
         }
 
 
