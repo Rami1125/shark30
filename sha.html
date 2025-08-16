@@ -1415,9 +1415,9 @@
                                 </thead>
                                 <tbody>
                                     <!-- נתוני מלאי ייטענו כאן -->
+                                    <p id="no-containers-in-use" class="text-center text-gray-500 mt-4 hidden">אין מכולות בשימוש כרגע. 🎉</p>
                                 </tbody>
                             </table>
-                            <p id="no-containers-in-use" class="text-center text-gray-500 mt-4 hidden">אין מכולות בשימוש כרגע. 🎉</p>
                         </div>
                     </div>
 
@@ -1435,9 +1435,9 @@
                                 </thead>
                                 <tbody>
                                     <!-- נתוני מלאי ייטענו כאן -->
+                                    <p id="no-containers-available" class="text-center text-gray-500 mt-4 hidden">אין מכולות פנויות כרגע.</p>
                                 </tbody>
                             </table>
-                            <p id="no-containers-available" class="text-center text-gray-500 mt-4 hidden">אין מכולות פנויות כרגע.</p>
                         </div>
                     </div>
                 </div>
@@ -1647,6 +1647,7 @@
                     </div>
                 `;
                 row.insertCell().textContent = order['שם סוכן'] || '';
+                row.insertCell().textContent = order['תעודה'] || ''; // Changed this to show docId instead of duplicate agent name
                 row.insertCell().textContent = order['שם לקוח'] || '';
                 row.insertCell().textContent = order['כתובת'] || '';
                 row.insertCell().textContent = order['סוג פעולה'] || '';
@@ -2054,19 +2055,6 @@
          */
         function closeDeleteConfirmModal() {
             document.getElementById('delete-confirm-modal').classList.remove('active');
-        }
-
-        /**
-         * מוחק הזמנה מהגיליון.
-         * @param {number} sheetRow מספר השורה בגיליון למחיקה.
-         */
-        async function deleteOrder(sheetRow) {
-            const response = await fetchData('delete', { id: sheetRow });
-            if (response.success) {
-                showAlert(response.message, 'success');
-                closeDeleteConfirmModal();
-                loadOrders(); // רענן נתונים לאחר מחיקה
-            }
         }
 
         /**
@@ -2631,7 +2619,7 @@
                 <p><i class="fas fa-hourglass-half icon"></i> <strong>ימים שעברו:</strong> ${orderData['ימים שעברו'] !== undefined ? orderData['ימים שעברו'] : ''}</p>
                 <p><i class="fas fa-calendar-check icon"></i> <strong>תאריך סיום צפוי:</strong> ${formatDate(orderData['תאריך סיום צפוי'])}</p>
                 <p><i class="fas fa-comment-dots icon"></i> <strong>הערות:</strong> ${orderData['הערות'] || ''}</p>
-                <p><i class="fas fa-calendar-times icon"></i> <strong>תאריך סגירה:</strong> ${formatData['תאריך סגירה'])}</p>
+                <p><i class="fas fa-calendar-times icon"></i> <strong>תאריך סגירה:</strong> ${formatDate(orderData['תאריך סגירה'])}</p>
                 <p><i class="fas fa-history icon"></i> <strong>הערות סיום:</strong> ${orderData['הערות סיום'] || ''}</p>
             `;
 
@@ -3147,18 +3135,18 @@
                     }
                 });
                 if (activeContainersForCustomer.length > 0) {
-                    activeCustomerContainers[customerName] = { address, containers: activeContainersForCustomer };
+                    customerActiveContainers[customerName] = { address, containers: activeContainersForCustomer };
                 }
             });
 
 
-            const sortedCustomers = Object.keys(activeCustomerContainers).sort();
+            const sortedCustomers = Object.keys(customerActiveContainers).sort();
 
             if (sortedCustomers.length === 0) {
                 noActiveContainersMsg.classList.remove('hidden');
             } else {
                 sortedCustomers.forEach(customerName => {
-                    const customerData = activeCustomerContainers[customerName];
+                    const customerData = customerActiveContainers[customerName];
                     const row = tableBody.insertRow();
                     row.insertCell().textContent = customerName;
                     row.insertCell().textContent = customerData.address;
