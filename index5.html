@@ -3,1476 +3,875 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת CRM לניהול מכולות מתקדם</title>
+    <title>מערכת CRM מתקדמת לניהול שכירות מכולות</title>
+    
+    <!-- Chosen Palette: Calm Neutral Harmony -->
+    <!-- Application Structure Plan: The application retains the highly effective three-section structure: Dashboard, Container Inventory, and Treatment Board. This structure provides a clear user flow, starting with a high-level overview (Dashboard), allowing for detailed asset management (Inventory), and focusing on actionable items (Treatment Board). The main interactions involve filtering the central data table from KPI cards and charts, managing orders through modals, and using a drag-and-drop Kanban board for workflow. This task-oriented design was chosen because it aligns perfectly with the typical workflow of a rental manager, prioritizing clarity, efficiency, and quick access to critical information. -->
+    <!-- Visualization & Content Choices: 
+        - Dashboard KPIs: Goal: Inform. Method: Styled HTML cards. Interaction: Click to filter main table. Justification: Provides a quick, scannable summary of key business metrics.
+        - Containers by Customer Chart: Goal: Compare. Method: Horizontal Bar Chart (Chart.js on Canvas). Interaction: Click a bar to filter the table by that customer. Justification: Best for comparing quantities across categories with potentially long labels (customer names).
+        - Order Status Chart: Goal: Show Proportions. Method: Doughnut Chart (Chart.js on Canvas). Interaction: Click a slice to filter the table by status. Justification: Modern and clear way to visualize the distribution of a whole.
+        - Main Orders Table: Goal: Organize/Inform. Method: Interactive HTML Table. Interaction: Sort, search, filter, click row for details modal. Justification: Standard and effective method for displaying detailed tabular data.
+        - Treatment Board: Goal: Organize/Manage Workflow. Method: HTML/CSS Kanban Board. Interaction: Drag-and-drop cards to update status. Justification: Highly intuitive and visual method for managing tasks and their lifecycle.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    // New Color Palette: Teal/Navy for primary, Coral for secondary
-                    colors: {
-                        primary: {
-                            100: '#e0f7f7', 200: '#b3ebeb', 300: '#80d6d6', 400: '#4dc1c1',
-                            500: '#33b0b0', 600: '#268a8a', 700: '#1a6666', 800: '#134d4d', 900: '#0d3333',
-                        },
-                        secondary: {
-                            100: '#fff2e6', 200: '#ffe3cc', 300: '#ffc8a3', 400: '#ffa366',
-                            500: '#ff8f40', 600: '#f57c2c', 700: '#e06b1d', 800: '#cc5f14', 900: '#b8540c',
-                        },
-                        danger: {
-                            100: '#fce7e7', 200: '#f9cfcf', 300: '#f5b5b5', 400: '#f09a9a',
-                            500: '#eb7c7c', 600: '#e06b6b', 700: '#d45959', 800: '#c24747', 900: '#b03838',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- Google Fonts - Poppins (for a modern, clean look) -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDKs - LOADED FIRST -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        
-        // Expose Firebase functions globally for use in the React App
-        window.firebase = {
-            initializeApp,
-            getAuth,
-            signInAnonymously,
-            signInWithCustomToken,
-            onAuthStateChanged,
-            getFirestore,
-            collection,
-            doc,
-            getDoc,
-            setDoc,
-            addDoc,
-            updateDoc,
-            deleteDoc,
-            onSnapshot,
-            query
-        };
-    </script>
-
-    <!-- React and ReactDOM - LOADED AFTER Firebase -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-    <!-- Custom Styles -->
     <style>
+        :root {
+            --color-background: #F8F7F4; /* Warm off-white */
+            --color-surface: #FFFFFF;
+            --color-primary: #3A5A40; /* Muted Forest Green */
+            --color-primary-light: #588157;
+            --color-secondary: #A3B18A; /* Sage Green */
+            --color-accent: #D9A05B; /* Soft Gold/Ochre */
+            --color-text-base: #333333;
+            --color-text-muted: #5c5c5c;
+            --color-border: #EAE8E1;
+            --color-danger: #C0392B;
+            --color-warning: #F39C12;
+            --color-success: #27AE60;
+            --color-info: #2980B9;
+
+            --font-main: 'Rubik', sans-serif;
+        }
+
+        body.dark {
+            --color-background: #1A1A1A;
+            --color-surface: #2C2C2C;
+            --color-primary: #588157;
+            --color-primary-light: #A3B18A;
+            --color-secondary: #588157;
+            --color-accent: #E5B878;
+            --color-text-base: #E0E0E0;
+            --color-text-muted: #A0A0A0;
+            --color-border: #404040;
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f0f4f8 0%, #eef1f6 100%);
-            direction: rtl;
-            text-align: right;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            font-family: var(--font-main);
+            background-color: var(--color-background);
+            color: var(--color-text-base);
+            transition: background-color 0.3s, color 0.3s;
         }
-        .main-content {
-            flex-grow: 1;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .glass-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-        }
+
         .btn {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-        .input-field {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid rgba(209, 213, 219, 0.5);
-            border-radius: 12px;
-            background-color: rgba(255, 255, 255, 0.8);
-            transition: all 0.2s ease;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: rgba(51, 176, 176, 0.8); /* Primary color */
-            box-shadow: 0 0 0 4px rgba(51, 176, 176, 0.2);
-        }
-        #ordersTableContainer {
-            max-height: 60vh;
-            overflow-y: auto;
-            border-radius: 16px;
-            border: 1px solid rgba(209, 213, 219, 0.4);
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        #ordersTable {
-            min-width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        #ordersTable thead th {
-            position: sticky;
-            top: 0;
-            background-color: rgba(249, 250, 251, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: 10;
-            padding: 1rem 1.25rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #4b5563;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid rgba(209, 213, 219, 0.5);
-        }
-        #ordersTable tbody tr {
-            transition: all 0.2s ease;
-        }
-        .table-row-open {
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-        .table-row-open:hover {
-            background-color: rgba(224, 247, 247, 0.8);
-        }
-        .table-row-closed {
-            background-color: rgba(248, 250, 252, 0.6);
-            text-decoration: line-through;
-            color: #94a3b8;
-        }
-        .table-row-closed:hover {
-            background-color: rgba(224, 231, 240, 0.7);
-        }
-        #ordersTable tbody td {
-            padding: 1rem 1.25rem;
-            font-size: 0.875rem;
-            color: #374151;
-            border-bottom: 1px solid rgba(209, 213, 219, 0.3);
-        }
-        .modal-content {
-            animation: fadeInScale 0.4s ease-out forwards;
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .modal-content::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
-            transform: rotate(45deg);
-            opacity: 0;
-            animation: sparkle-glow 3s infinite ease-out;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .modal-content.animate-fade-in-scale::before {
-            animation-delay: 0.3s;
-        }
-
-        @keyframes sparkle-glow {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.5; }
-            50% { transform: scale(1) rotate(180deg); opacity: 0; }
-            100% { transform: scale(0) rotate(360deg); opacity: 0; }
-        }
-
-        .modal-content h3, .modal-content h2 {
-            font-weight: 700;
-        }
-
-        .modal-message-box {
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.95rem;
-            color: #2d3748;
-            box-shadow: inset 0 1px 5px rgba(0,0,0,0.1);
-        }
-
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(226, 232, 240, 0.5);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #268a8a;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #1a6666;
-        }
-        .app-header {
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem 3rem;
-            margin-bottom: 2rem;
-            border-radius: 0 0 20px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-        }
-        .logo-text {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0d3333;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .datetime-display {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 10px;
-            padding: 0.75rem 1.25rem;
-            color: #1a6666;
-            font-weight: 600;
-            font-size: 1rem;
-            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.08);
-        }
-        .alert-banner {
-            background-color: #ff8f40;
-            color: #ffffff;
-            padding: 1rem;
-            text-align: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid transparent;
         }
-        .alert-banner:hover {
-            background-color: #f57c2c;
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+            box-shadow: 0 4px 15px -5px rgba(58, 90, 64, 0.6);
         }
-        @media (max-width: 768px) {
-            .glass-card {
-                padding: 1.5rem;
-            }
-            .modal-content {
-                padding: 2rem;
-                width: 95%;
-            }
-            #ordersTable thead th,
-            #ordersTable tbody td {
-                padding: 0.75rem;
-                font-size: 0.8rem;
-            }
+        .btn-primary:hover {
+            background-color: var(--color-primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px -5px rgba(58, 90, 64, 0.7);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-surface);
+            color: var(--color-text-muted);
+            border-color: var(--color-border);
+        }
+        body.dark .btn-secondary {
+             color: var(--color-text-base);
+        }
+        .btn-secondary:hover {
+            background-color: var(--color-background);
+            border-color: var(--color-secondary);
+            color: var(--color-primary);
+        }
+        
+        .card {
+            background-color: var(--color-surface);
+            border-radius: 1rem;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .nav-tab-btn.active {
+            background-color: var(--color-primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(58, 90, 64, 0.4);
+        }
+        
+        .modal-content {
+            background-color: var(--color-surface);
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 1px solid var(--color-border);
+        }
+
+        input, select, textarea {
+            background-color: var(--color-background);
+            border-color: var(--color-border);
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(58, 90, 64, 0.2);
+            background-color: var(--color-surface);
+        }
+        
+        th {
+            background-color: var(--color-background);
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #F8F7F4;
+        }
+        body.dark tr:hover {
+            background-color: #333;
+        }
+        
+        .status-open { color: var(--color-success); font-weight: 600; }
+        .status-closed { color: var(--color-text-muted); }
+        .status-overdue { color: var(--color-danger); font-weight: 600; }
+        .status-pending { color: var(--color-info); font-weight: 600; }
+        .status-warning { color: var(--color-warning); font-weight: 600; }
+        
+        .overdue-110-days {
+            background-color: #fdf2f2 !important;
+        }
+        body.dark .overdue-110-days {
+            background-color: #402525 !important;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
         }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="text-base">
 
-    <script type="text/javascript">
-        // Register Chart.js components
-        if (typeof Chart !== 'undefined') {
-            const {
-                ArcElement,
-                CategoryScale,
-                LinearScale,
-                BarElement,
-                LineElement,
-                PointElement,
-                Title,
-                Tooltip,
-                Legend
-            } = Chart;
+    <div id="loader-overlay" class="fixed inset-0 bg-gray-500 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[1000] transition-opacity duration-300">
+        <div class="w-16 h-16 border-4 border-t-4 border-gray-200 border-t-[var(--color-primary)] rounded-full animate-spin"></div>
+    </div>
 
-            Chart.register(
-                ArcElement,
-                CategoryScale,
-                LinearScale,
-                BarElement,
-                LineElement,
-                PointElement,
-                Title,
-                Tooltip,
-                Legend
-            );
+    <div id="alert-container" class="fixed bottom-5 left-5 z-[1100] space-y-3"></div>
+
+    <div id="order-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="modal-content w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between p-5 border-b border-[var(--color-border)]">
+                <h2 id="modal-title" class="text-xl font-bold">הוסף הזמנה חדשה</h2>
+                <button onclick="closeOrderModal()" class="text-2xl text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors">&times;</button>
+            </div>
+            <form id="order-form" class="p-6 space-y-4 overflow-y-auto">
+                 <div>
+                    <label for="תאריך הזמנה" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">תאריך הזמנה</label>
+                    <input type="date" id="תאריך הזמנה" name="תאריך הזמנה" class="w-full p-2 border" required>
+                </div>
+                <div>
+                    <label for="תעודה" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">תעודה</label>
+                    <input type="text" id="תעודה" name="תעודה" class="w-full p-2 border" required>
+                </div>
+                <div>
+                    <label for="שם סוכן" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">שם סוכן</label>
+                    <input type="text" id="שם סוכן" name="שם סוכן" class="w-full p-2 border" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="שם לקוח" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">שם לקוח</label>
+                        <input type="text" id="שם לקוח" name="שם לקוח" class="w-full p-2 border" required onblur="checkCustomerExistenceAndAutofill()">
+                    </div>
+                    <div>
+                        <label for="כתובת" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">כתובת</label>
+                        <input type="text" id="כתובת" name="כתובת" class="w-full p-2 border" required onblur="checkCustomerExistenceAndAutofill()">
+                    </div>
+                </div>
+                <div>
+                    <label for="סוג פעולה" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">סוג פעולה</label>
+                    <select id="סוג פעולה" name="סוג פעולה" class="w-full p-2 border" required onchange="handleActionTypeChange()">
+                        <option value="הורדה">הורדה</option>
+                        <option value="העלאה">העלאה</option>
+                        <option value="החלפה">החלפה</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="container-taken-div">
+                        <label for="מספר מכולה ירדה" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">מספר מכולה ירדה</label>
+                        <input type="text" id="מספר מכולה ירדה" name="מספר מכולה ירדה" class="w-full p-2 border">
+                    </div>
+                    <div id="container-brought-div" class="hidden">
+                        <label for="מספר מכולה עלתה" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">מספר מכולה עלתה</label>
+                        <input type="text" id="מספר מכולה עלתה" name="מספר מכולה עלתה" class="w-full p-2 border">
+                    </div>
+                </div>
+                <div>
+                    <label for="תאריך סיום צפוי" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">תאריך סיום צפוי</label>
+                    <input type="date" id="תאריך סיום צפוי" name="תאריך סיום צפוי" class="w-full p-2 border">
+                </div>
+                <div>
+                    <label for="הערות" class="block text-sm font-medium text-[var(--color-text-muted)] mb-1">הערות</label>
+                    <textarea id="הערות" name="הערות" rows="3" class="w-full p-2 border"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-[var(--color-border)]">
+                    <button type="button" class="btn btn-secondary" onclick="closeOrderModal()">ביטול</button>
+                    <button type="submit" class="btn btn-primary">שמור הזמנה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="delete-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="modal-content w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <h2 class="text-xl font-bold mb-4">אישור מחיקה</h2>
+            <p class="mb-6 text-[var(--color-text-muted)]">האם אתה בטוח שברצונך למחוק את הזמנה מספר <span id="delete-order-id" class="font-bold"></span>? פעולה זו אינה הפיכה.</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteConfirmModal()">ביטול</button>
+                <button type="button" class="btn bg-[var(--color-danger)] text-white" id="confirm-delete-btn">מחק</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="autofill-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="modal-content w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <h2 class="text-xl font-bold mb-4">לקוח זוהה!</h2>
+            <p class="mb-6 text-[var(--color-text-muted)]">לקוח/כתובת זוהו במערכת. האם למלא אוטומטית את נתוני ההזמנה האחרונה?</p>
+            <div class="flex justify-center gap-4">
+                <button type="button" class="btn btn-primary" onclick="confirmAutofill(true)">כן</button>
+                <button type="button" class="btn btn-secondary" onclick="confirmAutofill(false)">לא</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="min-h-screen flex flex-col">
+        <header class="p-6 text-center border-b border-[var(--color-border)]">
+            <div class="flex items-center justify-center gap-4 mb-2">
+                <div class="w-16 h-16 bg-[var(--color-primary)] rounded-full flex items-center justify-center">
+                    <i class="fas fa-truck-ramp-box text-3xl text-white"></i>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-[var(--color-primary)]">ניהול שכירות מכולות</h1>
+            </div>
+            <p class="text-lg text-[var(--color-text-muted)] mb-4">ניהול קל ויעיל של כל הזמנות המכולות</p>
+            <button id="theme-toggle" class="absolute top-5 left-5 text-xl p-2 rounded-full hover:bg-[var(--color-border)] transition-colors">
+                <i class="fas fa-sun"></i>
+            </button>
+        </header>
+
+        <div class="flex justify-center p-4">
+            <nav class="card flex gap-2 p-2">
+                <button id="nav-dashboard" class="nav-tab-btn px-4 py-2 rounded-lg active" onclick="showPage('dashboard')">
+                    <i class="fas fa-chart-pie mr-2"></i>לוח מחוונים
+                </button>
+                <button id="nav-container-inventory" class="nav-tab-btn px-4 py-2 rounded-lg" onclick="showPage('container-inventory')">
+                    <i class="fas fa-boxes-stacked mr-2"></i>מלאי מכולות
+                </button>
+                <button id="nav-treatment-board" class="nav-tab-btn px-4 py-2 rounded-lg" onclick="showPage('treatment-board')">
+                    <i class="fas fa-clipboard-list mr-2"></i>לוח טיפול
+                </button>
+            </nav>
+        </div>
+
+        <main class="flex-grow p-4 md:p-6 lg:p-8">
+            <section id="dashboard-page" class="page-content space-y-8">
+                <div class="text-center">
+                    <h2 class="text-2xl font-semibold mb-2">סקירה כללית</h2>
+                    <p class="text-[var(--color-text-muted)]">כאן ניתן לראות את הנתונים המרכזיים של המערכת, לנהל הזמנות קיימות וליצור חדשות.</p>
+                </div>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4 flex-wrap">
+                    <button class="btn btn-primary" onclick="openOrderModal('add')">
+                        <i class="fas fa-plus"></i> הוסף הזמנה חדשה
+                    </button>
+                    <button class="btn bg-[var(--color-danger)] text-white" onclick="filterTable('חורג', 'all')">
+                        <i class="fas fa-triangle-exclamation"></i> הצג הזמנות חורגות
+                        <span id="overdue-customers-badge" class="ml-2 bg-white text-[var(--color-danger)] px-2 py-0.5 rounded-full text-xs font-bold">0</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> רענן נתונים
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="card p-5 flex items-center justify-between"><div class="font-medium">הזמנות פתוחות<p id="open-orders-count" class="text-3xl font-bold text-[var(--color-primary)] mt-1">0</p></div><i class="fas fa-box-open text-3xl text-[var(--color-secondary)]"></i></div>
+                    <div class="card p-5 flex items-center justify-between"><div class="font-medium">הזמנות חורגות<p id="overdue-orders-count" class="text-3xl font-bold text-[var(--color-danger)] mt-1">0</p></div><i class="fas fa-triangle-exclamation text-3xl text-[var(--color-danger)]"></i></div>
+                    <div class="card p-5 flex items-center justify-between"><div class="font-medium">מכולות בשימוש<p id="containers-in-use" class="text-3xl font-bold text-[var(--color-primary)] mt-1">0</p></div><i class="fas fa-truck-moving text-3xl text-[var(--color-secondary)]"></i></div>
+                    <div class="card p-5 flex items-center justify-between"><div class="font-medium">לקוחות פעילים<p id="active-customers-count" class="text-3xl font-bold text-[var(--color-primary)] mt-1">0</p></div><i class="fas fa-users text-3xl text-[var(--color-secondary)]"></i></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-4">מכולות בשימוש לפי לקוח</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-containers-by-customer"></canvas>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-4">התפלגות הזמנות לפי סטטוס</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-status-pie"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h2 class="text-2xl font-bold mb-6">רשימת הזמנות</h2>
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <input type="text" id="search-input" placeholder="חיפוש חופשי..." class="flex-grow p-2 border" onkeyup="filterTable()">
+                        <select id="filter-status" onchange="filterTable()" class="p-2 border">
+                            <option value="all">כל הסטטוסים</option>
+                            <option value="פתוח">פתוח</option>
+                            <option value="חורג">חורג</option>
+                            <option value="סגור">סגור</option>
+                            <option value="ממתין/לא תקין">ממתין/לא תקין</option>
+                        </select>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table id="orders-table" class="w-full text-right">
+                            <thead class="border-b-2 border-[var(--color-border)]">
+                                <tr>
+                                    <th class="p-3">תאריך</th>
+                                    <th class="p-3">תעודה</th>
+                                    <th class="p-3">לקוח</th>
+                                    <th class="p-3">כתובת</th>
+                                    <th class="p-3">סוג פעולה</th>
+                                    <th class="p-3">ימים שעברו</th>
+                                    <th class="p-3">מכולות</th>
+                                    <th class="p-3">סטטוס</th>
+                                    <th class="p-3">פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="container-inventory-page" class="page-content hidden space-y-8">
+                 <div class="text-center">
+                    <h2 class="text-2xl font-semibold mb-2">ניהול מלאי מכולות</h2>
+                    <p class="text-[var(--color-text-muted)]">עקוב אחר המיקום והזמינות של כל המכולות במערכת.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-[var(--color-danger)]">מכולות בשימוש</h3>
+                        <div class="overflow-x-auto max-h-96">
+                            <table id="containers-in-use-table" class="w-full text-right">
+                                <thead><tr><th class="p-2">מספר</th><th class="p-2">לקוח</th><th class="p-2">תאריך</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-[var(--color-success)]">מכולות פנויות</h3>
+                        <div class="overflow-x-auto max-h-96">
+                            <table id="containers-available-table" class="w-full text-right">
+                                <thead><tr><th class="p-2">מספר</th><th class="p-2">תאריך התפנות</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="treatment-board-page" class="page-content hidden space-y-8">
+                <div class="text-center">
+                    <h2 class="text-2xl font-semibold mb-2">לוח טיפול</h2>
+                    <p class="text-[var(--color-text-muted)]">נהל את ההזמנות הדורשות טיפול באמצעות גרירה ושחרור בין הסטטוסים השונים.</p>
+                </div>
+                <div id="no-treatment-orders" class="text-center text-lg text-[var(--color-text-muted)] hidden">אין הזמנות לטיפול כרגע. כל הכבוד! 🎉</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div id="column-overdue" ondrop="drop(event)" ondragover="allowDrop(event)" class="p-4 rounded-lg bg-[var(--color-background)] space-y-4 min-h-[200px]">
+                        <h3 class="font-bold text-lg text-center text-[var(--color-danger)]">חורגות</h3>
+                    </div>
+                    <div id="column-in-progress" ondrop="drop(event)" ondragover="allowDrop(event)" class="p-4 rounded-lg bg-[var(--color-background)] space-y-4 min-h-[200px]">
+                        <h3 class="font-bold text-lg text-center text-[var(--color-info)]">בטיפול</h3>
+                    </div>
+                    <div id="column-resolved" ondrop="drop(event)" ondragover="allowDrop(event)" class="p-4 rounded-lg bg-[var(--color-background)] space-y-4 min-h-[200px]">
+                        <h3 class="font-bold text-lg text-center text-[var(--color-success)]">טופלו</h3>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+    const SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxiS3wXwXCyh8xM1EdTiwXy0T-UyBRQgfrnRRis531lTxmgtJIGawfsPeetX5nVJW3V/exec';
+    let allOrders = [];
+    let currentEditingOrder = null;
+    let autoFillData = null;
+    let charts = {};
+
+    function showLoader() { document.getElementById('loader-overlay').classList.remove('opacity-0', 'pointer-events-none'); }
+    function hideLoader() { document.getElementById('loader-overlay').classList.add('opacity-0', 'pointer-events-none'); }
+
+    function toggleTheme() {
+        const isDarkMode = document.body.classList.toggle('dark');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        document.querySelector('#theme-toggle i').className = isDarkMode ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    function initializeTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.body.classList.add('dark');
+            document.querySelector('#theme-toggle i').className = 'fas fa-moon';
         }
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    }
 
-        // Utility function to format date
-        const formatDisplayDate = (dateString) => {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            return isNaN(date) ? dateString : date.toLocaleDateString('he-IL', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        };
+    function showAlert(message, type = 'info') {
+        const container = document.getElementById('alert-container');
+        const alertItem = document.createElement('div');
+        let bgColor, icon;
+        switch(type) {
+            case 'success': bgColor = 'bg-green-100 border-green-500 text-green-700'; icon = 'fa-check-circle'; break;
+            case 'error': bgColor = 'bg-red-100 border-red-500 text-red-700'; icon = 'fa-times-circle'; break;
+            case 'warning': bgColor = 'bg-yellow-100 border-yellow-500 text-yellow-700'; icon = 'fa-exclamation-triangle'; break;
+            default: bgColor = 'bg-blue-100 border-blue-500 text-blue-700'; icon = 'fa-info-circle'; break;
+        }
+        alertItem.className = `p-4 rounded-lg border-l-4 shadow-md flex items-center gap-3 transform translate-x-full opacity-0 animate-slide-in ${bgColor}`;
+        alertItem.innerHTML = `<i class="fas ${icon}"></i><p>${message}</p>`;
+        container.prepend(alertItem);
+        setTimeout(() => {
+            alertItem.style.opacity = '0';
+            alertItem.style.transform = 'translateX(100%)';
+            setTimeout(() => alertItem.remove(), 500);
+        }, 5000);
+    }
 
-        // Utility function to calculate days passed
-        const calculateDaysPassed = (dateString) => {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return '';
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            date.setHours(0, 0, 0, 0);
-
-            const diffTime = today.getTime() - date.getTime();
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays >= 0 ? diffDays : 0;
-        };
-
-        // Loading overlay component
-        const LoadingOverlay = () => (
-            React.createElement('div', { id: "loadingOverlay", className: "fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[2000]" },
-                React.createElement('div', { className: "flex flex-col items-center" },
-                    React.createElement('div', { className: "animate-spin border-4 border-gray-300 border-t-primary-500 rounded-full w-16 h-16" }),
-                    React.createElement('p', { className: "text-white mt-4 text-lg" }, "טוען נתונים...")
-                )
-            )
-        );
-
-        // General purpose modal component
-        const GeneralModal = ({ title, message, isOpen, onClose, isConfirm, onConfirm }) => {
-            if (!isOpen) return null;
-
-            return (
-                React.createElement('div', { className: "modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1000]" },
-                    React.createElement('div', { className: "modal-content bg-white bg-opacity-90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-11/12 max-w-lg relative border border-white border-opacity-60 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale" },
-                        React.createElement('button', {
-                            className: "absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl focus:outline-none",
-                            onClick: onClose
-                        },
-                            React.createElement('i', { className: "fas fa-times" })
-                        ),
-                        React.createElement('h3', { className: "text-xl font-semibold mb-4 text-gray-800" }, title),
-                        React.createElement('div', { className: "modal-message-box" },
-                            React.createElement('p', { className: "text-gray-700", dangerouslySetInnerHTML: { __html: message } })
-                        ),
-                        React.createElement('div', { className: "flex justify-center gap-4" },
-                            isConfirm ? (
-                                React.createElement(React.Fragment, null,
-                                    React.createElement('button', {
-                                        type: "button",
-                                        className: "btn bg-danger-600 hover:bg-danger-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1",
-                                        onClick: onConfirm
-                                    }, "כן, אשר"),
-                                    React.createElement('button', {
-                                        type: "button",
-                                        className: "btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1",
-                                        onClick: onClose
-                                    }, "ביטול")
-                                )
-                            ) : (
-                                React.createElement('button', {
-                                    type: "button",
-                                    className: "btn bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1",
-                                    onClick: onClose
-                                }, "אישור")
-                            )
-                        )
-                    )
-                )
-            );
-        };
-
-        const OrderFormModal = ({ isOpen, onClose, onSubmit, initialData }) => {
-            const [formData, setFormData] = React.useState({
-                'מתאריך': '', 'תעודה': '', 'שם סוכן': '', 'שם לקוח': '', 'כתובת': '',
-                'סוג פעולה': 'הצבה', 'ימים שעברו': '', 'מס" מכולה ירדה': '', 'מס" מכולה עלתה': '',
-                'ימים שעברו (עלתה)': '', 'closed': 'פתוחה', 'הערות': '', docId: null,
-            });
-
-            React.useEffect(() => {
-                if (initialData) {
-                    setFormData({
-                        ...initialData,
-                        'מתאריך': initialData['מתאריך'] ? new Date(initialData['מתאריך']).toISOString().split('T')[0] : '',
-                        docId: initialData.docId || null,
-                    });
+    async function fetchData(action, params = {}, retries = 0) {
+        showLoader();
+        const urlParams = new URLSearchParams({ action, ...params });
+        const url = `${SCRIPT_WEB_APP_URL}?${urlParams.toString()}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data.success && data.message && data.message.includes('Service invoked too many times')) {
+                const delay = Math.pow(2, retries) * 1000;
+                if (retries < 5) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchData(action, params, retries + 1);
                 } else {
-                    setFormData({
-                        'מתאריך': '', 'תעודה': '', 'שם סוכן': '', 'שם לקוח': '', 'כתובת': '',
-                        'סוג פעולה': 'הצבה', 'ימים שעברו': '', 'מס" מכולה ירדה': '', 'מס" מכולה עלתה': '',
-                        'ימים שעברו (עלתה)': '', 'closed': 'פתוחה', 'הערות': '', docId: null,
-                    });
+                    showAlert('השרת עמוס, אנא נסה שוב מאוחר יותר.', 'error');
                 }
-            }, [initialData]);
-
-            const handleChange = (e) => {
-                const { id, value } = e.target;
-                const fieldName = id.replace('order', '');
-                let key = '';
-
-                switch (fieldName) {
-                    case 'FromDate': key = 'מתאריך'; break;
-                    case 'DocumentId': key = 'תעודה'; break;
-                    case 'AgentName': key = 'שם סוכן'; break;
-                    case 'ClientName': key = 'שם לקוח'; break;
-                    case 'Address': key = 'כתובת'; break;
-                    case 'ActionType': key = 'סוג פעולה'; break;
-                    case 'DaysPassed': key = 'ימים שעברו'; break;
-                    case 'ContainerRemoved': key = 'מס" מכולה ירדה'; break;
-                    case 'ContainerAdded': key = 'מס" מכולה עלתה'; break;
-                    case 'DaysPassedAdded': key = 'ימים שעברו (עלתה)'; break;
-                    case 'Status': key = 'closed'; break;
-                    case 'Notes': key = 'הערות'; break;
-                    default: key = id; break;
-                }
-
-                setFormData(prev => {
-                    const newFormData = { ...prev, [key]: value };
-                    // Recalculate 'ימים שעברו (עלתה)' if 'מתאריך' or 'מס" מכולה עלתה' changes
-                    if (newFormData['מתאריך'] && newFormData['מס" מכולה עלתה']) {
-                        newFormData['ימים שעברו (עלתה)'] = calculateDaysPassed(newFormData['מתאריך']);
-                    } else {
-                        newFormData['ימים שעברו (עלתה)'] = ''; // Clear if conditions not met
-                    }
-                    return newFormData;
-                });
-            };
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                onSubmit(formData);
-            };
-
-            if (!isOpen) return null;
-
-            return (
-                React.createElement('div', { className: "modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1000]" },
-                    React.createElement('div', { className: "modal-content bg-white bg-opacity-90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-11/12 max-w-2xl relative border border-white border-opacity-60 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale" },
-                        React.createElement('h2', { className: "text-2xl font-bold mb-6 text-gray-800" }, formData.docId ? 'ערוך הזמנה' : 'הוסף הזמנה חדשה'),
-                        React.createElement('button', {
-                            className: "absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl focus:outline-none",
-                            onClick: onClose
-                        },
-                            React.createElement('i', { className: "fas fa-times" })
-                        ),
-                        React.createElement('form', { onSubmit: handleSubmit, className: "grid grid-cols-1 md:grid-cols-2 gap-4" },
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderFromDate", className: "block text-gray-700 text-sm font-bold mb-2" }, "מתאריך:"),
-                                React.createElement('input', { type: "date", id: "orderFromDate", className: "input-field", value: formData['מתאריך'], onChange: handleChange, required: true })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderDocumentId", className: "block text-gray-700 text-sm font-bold mb-2" }, "תעודה:"),
-                                React.createElement('input', { type: "text", id: "orderDocumentId", className: "input-field", value: formData['תעודה'], onChange: handleChange, required: true })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderAgentName", className: "block text-gray-700 text-sm font-bold mb-2" }, "שם סוכן:"),
-                                React.createElement('input', { type: "text", id: "orderAgentName", className: "input-field", value: formData['שם סוכן'], onChange: handleChange, required: true })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderClientName", className: "block text-gray-700 text-sm font-bold mb-2" }, "שם לקוח:"),
-                                React.createElement('input', { type: "text", id: "orderClientName", className: "input-field", value: formData['שם לקוח'], onChange: handleChange, required: true })
-                            ),
-                            React.createElement('div', { className: "md:col-span-2" },
-                                React.createElement('label', { htmlFor: "orderAddress", className: "block text-gray-700 text-sm font-bold mb-2" }, "כתובת:"),
-                                React.createElement('input', { type: "text", id: "orderAddress", className: "input-field", value: formData['כתובת'], onChange: handleChange, required: true })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderActionType", className: "block text-gray-700 text-sm font-bold mb-2" }, "סוג פעולה:"),
-                                React.createElement('select', { id: "orderActionType", className: "input-field", value: formData['סוג פעולה'], onChange: handleChange, required: true },
-                                    React.createElement('option', { value: "הצבה" }, "הצבה"),
-                                    React.createElement('option', { value: "הוצאה" }, "הוצאה"),
-                                    React.createElement('option', { value: "פינוי במקום" }, "פינוי במקום"),
-                                    React.createElement('option', { value: "החלפה" }, "החלפה")
-                                )
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderDaysPassed", className: "block text-gray-700 text-sm font-bold mb-2" }, "ימים שעברו (ירדה):"),
-                                React.createElement('input', { type: "number", id: "orderDaysPassed", className: "input-field", value: formData['ימים שעברו'], onChange: handleChange })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderContainerRemoved", className: "block text-gray-700 text-sm font-bold mb-2" }, "מס\" מכולה ירדה:"),
-                                React.createElement('input', { type: "text", id: "orderContainerRemoved", className: "input-field", value: formData['מס" מכולה ירדה'], onChange: handleChange })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderContainerAdded", className: "block text-gray-700 text-sm font-bold mb-2" }, "מס\" מכולה עלתה:"),
-                                React.createElement('input', { type: "text", id: "orderContainerAdded", className: "input-field", value: formData['מס" מכולה עלתה'], onChange: handleChange })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderDaysPassedAdded", className: "block text-gray-700 text-sm font-bold mb-2" }, "ימים שעברו (עלתה):"),
-                                React.createElement('input', { type: "number", id: "orderDaysPassedAdded", className: "input-field", value: formData['ימים שעברו (עלתה)'], onChange: handleChange, disabled: true })
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('label', { htmlFor: "orderStatus", className: "block text-gray-700 text-sm font-bold mb-2" }, "סטטוס:"),
-                                React.createElement('select', { id: "orderStatus", className: "input-field", value: formData['closed'], onChange: handleChange, required: true },
-                                    React.createElement('option', { value: "פתוחה" }, "פתוחה"),
-                                    React.createElement('option', { value: "סגורה" }, "סגורה")
-                                )
-                            ),
-                            React.createElement('div', { className: "md:col-span-2" },
-                                React.createElement('label', { htmlFor: "orderNotes", className: "block text-gray-700 text-sm font-bold mb-2" }, "הערות:"),
-                                React.createElement('textarea', { id: "orderNotes", rows: "3", className: "input-field", value: formData['הערות'], onChange: handleChange })
-                            ),
-                            React.createElement('div', { className: "md:col-span-2 flex justify-end gap-4 mt-6" },
-                                React.createElement('button', { type: "submit", className: "btn bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1" }, "שמור הזמנה"),
-                                React.createElement('button', { type: "button", className: "btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1", onClick: onClose }, "ביטול")
-                            )
-                        )
-                    )
-                )
-            );
-        };
-
-        const OrderDetailsModal = ({ isOpen, onClose, order, onEdit, onDuplicate, onCloseOrder, onDelete }) => {
-            if (!isOpen || !order) return null;
-
-            const displayLabels = {
-                'מתאריך': 'תאריך:', 'תעודה': 'מספר תעודה:', 'שם סוכן': 'סוכן:', 'שם לקוח': 'לקוח:',
-                'כתובת': 'כתובת:', 'סוג פעולה': 'סוג פעולה:', 'ימים שעברו': 'ימים שעברו (ירדה):',
-                'מס" מכולה ירדה': 'מכולה ירדה:', 'מס" מכולה עלתה': 'מכולה עלתה:',
-                'ימים שעברו (עלתה)': 'ימים שעברו (עלתה):', 'closed': 'סטטוס:', 'הערות': 'הערות:',
-            };
-
-            return (
-                React.createElement('div', { className: "modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[1000]" },
-                    React.createElement('div', { className: "modal-content bg-white bg-opacity-90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-11/12 max-w-2xl relative border border-white border-opacity-60 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale" },
-                        React.createElement('h2', { className: "text-2xl font-bold mb-6 text-gray-800" }, "פרטי הזמנה"),
-                        React.createElement('button', {
-                            className: "absolute top-4 left-4 text-gray-500 hover:text-gray-700 text-2xl focus:outline-none",
-                            onClick: onClose
-                        },
-                            React.createElement('i', { className: "fas fa-times" })
-                        ),
-                        React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-4 text-right mb-8" },
-                            Object.entries(displayLabels).map(([key, label]) => (
-                                React.createElement(React.Fragment, { key: key },
-                                    React.createElement('div', { className: "col-span-1 text-gray-600 font-bold text-sm md:text-base" }, label),
-                                    React.createElement('div', { className: `col-span-1 text-gray-800 text-sm md:text-base ${key === 'closed' ? (order[key] === 'פתוחה' ? 'text-green-600 font-semibold' : 'text-gray-500 font-semibold') : ''}` },
-                                        key === 'מתאריך' ? formatDisplayDate(order[key]) : order[key] || '-'
-                                    )
-                                )
-                            ))
-                        ),
-                        React.createElement('div', { className: "flex flex-wrap justify-center gap-4" },
-                            React.createElement('button', { onClick: () => onEdit(order), className: "btn bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 flex items-center" },
-                                React.createElement('i', { className: "fas fa-edit ml-2" }), " ערוך"
-                            ),
-                            React.createElement('button', { onClick: () => onDuplicate(order.docId), className: "btn bg-secondary-600 hover:bg-secondary-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 flex items-center" },
-                                React.createElement('i', { className: "fas fa-copy ml-2" }), " שכפל"
-                            ),
-                            order.closed === 'פתוחה' && (
-                                React.createElement('button', { onClick: () => onCloseOrder(order.docId), className: "btn bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 flex items-center" },
-                                    React.createElement('i', { className: "fas fa-check-circle ml-2" }), " סגור"
-                                )
-                            ),
-                            React.createElement('button', { onClick: () => onDelete(order.docId), className: "btn bg-danger-600 hover:bg-danger-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 flex items-center" },
-                                React.createElement('i', { className: "fas fa-trash ml-2" }), " מחק"
-                            )
-                        )
-                    )
-                )
-            );
-        };
-
-        function App() {
-            const [loading, setLoading] = React.useState(true);
-            const [allOrders, setAllOrders] = React.useState({ openOrders: [], closedOrders: [] });
-            const [filteredOrders, setFilteredOrders] = React.useState([]);
-            const [currentDateTime, setCurrentDateTime] = React.useState('');
-            const [isOrderModalOpen, setIsOrderModalOpen] = React.useState(false);
-            const [isDetailModalOpen, setIsDetailModalOpen] = React.useState(false);
-            const [isGeneralModalOpen, setIsGeneralModalOpen] = React.useState(false);
-            const [generalModalContent, setGeneralModalContent] = React.useState({ title: '', message: '', isConfirm: false, onConfirm: null });
-            const [selectedOrder, setSelectedOrder] = React.useState(null);
-            const [initialOrderFormData, setInitialOrderFormData] = React.useState(null);
-            
-            // Firebase States
-            const [db, setDb] = React.useState(null);
-            const [auth, setAuth] = React.useState(null);
-            const [userId, setUserId] = React.useState(null);
-            const [isAuthReady, setIsAuthReady] = React.useState(false);
-
-            const [filterCriteria, setFilterCriteria] = React.useState({
-                clientName: '', address: '', actionType: '', status: '', date: '',
-            });
-
-            const showGeneralModal = React.useCallback((title, message, isConfirm = false, onConfirm = null) => {
-                setGeneralModalContent({ title, message, isConfirm, onConfirm });
-                setIsGeneralModalOpen(true);
-            }, []);
-
-            // --- Callbacks (moved to top for correct initialization) ---
-            const handleOrderSubmit = React.useCallback(async (formData) => {
-                setLoading(true);
-                setIsOrderModalOpen(false);
-
-                if (!db || !userId) {
-                    showGeneralModal('שגיאה', 'מערכת Firebase אינה מאותחלת. אנא רענן את העמוד.');
-                    setLoading(false);
-                    return;
-                }
-
-                const ordersCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/orders`);
-                const orderToSave = { ...formData };
-                delete orderToSave.docId; // docId should not be part of the document data itself
-
-                try {
-                    if (formData.docId) {
-                        // Update existing document
-                        const docRef = window.firebase.doc(db, `artifacts/${__app_id}/users/${userId}/orders`, formData.docId);
-                        await window.firebase.setDoc(docRef, orderToSave);
-                        showGeneralModal('הצלחה', 'ההזמנה עודכנה בהצלחה!');
-                    } else {
-                        // Add new document
-                        await window.firebase.addDoc(ordersCollectionRef, orderToSave);
-                        showGeneralModal('הצלחה', 'הזמנה חדשה נוספה בהצלחה!');
-                    }
-                } catch (error) {
-                    console.error('שגיאה בשמירת הזמנה ל-Firestore:', error);
-                    showGeneralModal('שגיאה', `שגיאה בשמירת הזמנה. אנא נסה שוב.<br><small>${error.message}</small>`);
-                } finally {
-                    setLoading(false);
-                }
-            }, [db, userId, showGeneralModal]);
-
-            const confirmCloseOrder = React.useCallback(async (docId) => {
-                setIsDetailModalOpen(false);
-                showGeneralModal(
-                    'אשר סגירת הזמנה',
-                    `האם אתה בטוח שברצונך לסגור את ההזמנה?`,
-                    true,
-                    async () => {
-                        setLoading(true);
-                        if (!db || !userId) {
-                            showGeneralModal('שגיאה', 'מערכת Firebase אינה מאותחלת. אנא רענן את העמוד.');
-                            setLoading(false);
-                            return;
-                        }
-                        try {
-                            const docRef = window.firebase.doc(db, `artifacts/${__app_id}/users/${userId}/orders`, docId);
-                            await window.firebase.updateDoc(docRef, { closed: 'סגורה' });
-                            showGeneralModal('הצלחה', 'ההזמנה נסגרה בהצלחה!');
-                        } catch (error) {
-                            console.error('שגיאה בסגירת הזמנה:', error);
-                            showGeneralModal('שגיאה', `שגיאה בסגירת הזמנה. אנא נסה שוב.<br><small>${error.message}</small>`);
-                        } finally {
-                            setLoading(false);
-                        }
-                    }
-                );
-            }, [db, userId, showGeneralModal]);
-
-            const confirmDeleteOrder = React.useCallback(async (docId) => {
-                setIsDetailModalOpen(false);
-                showGeneralModal(
-                    'אשר מחיקת הזמנה',
-                    `האם אתה בטוח שברצונך למחוק את ההזמנה? פעולה זו אינה הפיכה!`,
-                    true,
-                    async () => {
-                        setLoading(true);
-                        if (!db || !userId) {
-                            showGeneralModal('שגיאה', 'מערכת Firebase אינה מאותחלת. אנא רענן את העמוד.');
-                            setLoading(false);
-                            return;
-                        }
-                        try {
-                            const docRef = window.firebase.doc(db, `artifacts/${__app_id}/users/${userId}/orders`, docId);
-                            await window.firebase.deleteDoc(docRef);
-                            showGeneralModal('הצלחה', 'ההזמנה נמחקה בהצלחה!');
-                        } catch (error) {
-                            console.error('שגיאה במחיקת הזמנה:', error);
-                            showGeneralModal('שגיאה', `שגיאה במחיקת הזמנה. אנא נסה שוב.<br><small>${error.message}</small>`);
-                        } finally {
-                            setLoading(false);
-                        }
-                    }
-                );
-            }, [db, userId, showGeneralModal]);
-
-            const handleDuplicateOrder = React.useCallback(async (docId) => {
-                setIsDetailModalOpen(false);
-                setLoading(true);
-                if (!db || !userId) {
-                    showGeneralModal('שגיאה', 'מערכת Firebase אינה מאותחלת. אנא רענן את העמוד.');
-                    setLoading(false);
-                    return;
-                }
-
-                try {
-                    const originalDocRef = window.firebase.doc(db, `artifacts/${__app_id}/users/${userId}/orders`, docId);
-                    const docSnap = await window.firebase.getDoc(originalDocRef);
-
-                    if (docSnap.exists()) {
-                        const originalData = docSnap.data();
-                        const duplicatedData = { ...originalData };
-                        // Clear fields that should be unique or reset for a new order
-                        duplicatedData['תעודה'] = `${originalData['תעודה']}_copy_${new Date().getTime()}`; // Example: Append timestamp to document ID
-                        duplicatedData['closed'] = 'פתוחה'; // Duplicate as open order
-                        duplicatedData['ימים שעברו (עלתה)'] = ''; // Reset days passed for new duplicate
-                        duplicatedData['מתאריך'] = new Date().toISOString().split('T')[0]; // Set to current date
-
-                        const ordersCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/orders`);
-                        await window.firebase.addDoc(ordersCollectionRef, duplicatedData);
-                        showGeneralModal('הצלחה', 'הזמנה שוכפלה בהצלחה!');
-                    } else {
-                        showGeneralModal('שגיאה', 'הזמנה מקורית לא נמצאה לשכפול.');
-                    }
-                } catch (error) {
-                    console.error('שגיאה בשכפול הזמנה:', error);
-                    showGeneralModal('שגיאה', `שגיאה בשכפול הזמנה. אנא נסה שוב.<br><small>${error.message}</small>`);
-                } finally {
-                    setLoading(false);
-                }
-            }, [db, userId, showGeneralModal]);
-            // --- End of Callbacks ---
-
-            // Firebase Initialization and Authentication
-            React.useEffect(() => {
-                // Ensure firebase is loaded
-                if (typeof window.firebase === 'undefined') {
-                    console.error("Firebase SDK not loaded.");
-                    showGeneralModal('שגיאת אתחול', 'שגיאה בטעינת רכיבי Firebase. אנא רענן את העמוד.');
-                    setLoading(false);
-                    return;
-                }
-
-                const initializeFirebase = async () => {
-                    try {
-                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-
-                        const firebaseApp = window.firebase.initializeApp(firebaseConfig);
-                        const authInstance = window.firebase.getAuth(firebaseApp);
-                        const dbInstance = window.firebase.getFirestore(firebaseApp);
-
-                        setAuth(authInstance);
-                        setDb(dbInstance);
-
-                        // Authenticate
-                        if (typeof __initial_auth_token !== 'undefined') {
-                            await window.firebase.signInWithCustomToken(authInstance, __initial_auth_token);
-                        } else {
-                            await window.firebase.signInAnonymously(authInstance);
-                        }
-
-                        // Listen for auth state changes
-                        window.firebase.onAuthStateChanged(authInstance, (user) => {
-                            if (user) {
-                                setUserId(user.uid);
-                            } else {
-                                // Fallback for anonymous or unauthenticated users if needed
-                                setUserId(crypto.randomUUID()); // Generate a random ID for unauthenticated if no token
-                            }
-                            setIsAuthReady(true); // Mark auth as ready regardless of authenticated status
-                        });
-
-                    } catch (error) {
-                        console.error('שגיאת אתחול Firebase:', error);
-                        showGeneralModal('שגיאת אתחול', `שגיאה באתחול Firebase: ${error.message}.`);
-                        setLoading(false);
-                    }
-                };
-
-                initializeFirebase();
-            }, [showGeneralModal]); // Run once on component mount
-
-            // Fetch and listen for real-time orders from Firestore
-            React.useEffect(() => {
-                if (!isAuthReady || !db || !userId) {
-                    return; // Wait for Firebase and auth to be ready
-                }
-
-                setLoading(true);
-                // Define the collection path for user-specific orders
-                const ordersCollectionRef = window.firebase.collection(db, `artifacts/${__app_id}/users/${userId}/orders`);
-                const q = window.firebase.query(ordersCollectionRef);
-
-                const unsubscribe = window.firebase.onSnapshot(q, (snapshot) => {
-                    const ordersData = [];
-                    snapshot.forEach(doc => {
-                        ordersData.push({ docId: doc.id, ...doc.data() });
-                    });
-
-                    // Separate open and closed orders
-                    const open = ordersData.filter(order => order.closed === 'פתוחה');
-                    const closed = ordersData.filter(order => order.closed === 'סגורה');
-
-                    setAllOrders({ openOrders: open, closedOrders: closed });
-                    setFilteredOrders([...open, ...closed]); // Initially show all
-                    runAlertChecks({ openOrders: open, closedOrders: closed });
-                    setLoading(false);
-                }, (error) => {
-                    console.error("שגיאת האזנה לנתונים מ-Firestore:", error);
-                    showGeneralModal('שגיאת נתונים', `לא ניתן לטעון נתונים בזמן אמת: ${error.message}`);
-                    setLoading(false);
-                });
-
-                // Cleanup subscription on component unmount
-                return () => unsubscribe();
-            }, [db, userId, isAuthReady, showGeneralModal]); // Re-run if db, userId, or authReady changes
-
-            // Update date and time display
-            React.useEffect(() => {
-                const intervalId = setInterval(() => {
-                    const now = new Date();
-                    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                    const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-                    const formattedDate = now.toLocaleDateString('he-IL', dateOptions);
-                    const formattedTime = now.toLocaleTimeString('he-IL', timeOptions);
-                    setCurrentDateTime(`${formattedDate} | ${formattedTime}`);
-                }, 1000);
-
-                return () => clearInterval(intervalId);
-            }, []);
-
-
-            const updateDashboard = React.useCallback(() => {
-                const openCount = allOrders.openOrders.length;
-                const exceedingOrders = allOrders.openOrders.filter(order => {
-                    const daysPassedAdded = parseInt(order['ימים שעברו (עלתה)']);
-                    return order['closed'] === 'פתוחה' && daysPassedAdded >= 7;
-                });
-
-                const inUseContainers = new Set(allOrders.openOrders.map(order => order['מס" מכולה עלתה']).filter(Boolean));
-                const activeCustomers = new Set(allOrders.openOrders.map(order => order['שם לקוח']).filter(Boolean));
-
-                return { openCount, exceedingOrdersCount: exceedingOrders.length, inUseContainersCount: inUseContainers.size, activeCustomersCount: activeCustomers.size };
-            }, [allOrders]);
-
-            const dashboardData = React.useMemo(() => updateDashboard(), [updateDashboard]);
-
-
-            const renderOrdersTable = React.useCallback(() => {
-                if (filteredOrders.length === 0) {
-                    return (
-                        React.createElement('tr', null,
-                            React.createElement('td', { colSpan: "13", className: "text-center py-4 text-gray-500" }, "אין הזמנות להצגה.")
-                        )
-                    );
-                }
-
-                // Sort orders by 'מתאריך' in descending order (most recent first)
-                const sortedFilteredOrders = [...filteredOrders].sort((a, b) => {
-                    const dateA = new Date(a['מתאריך']);
-                    const dateB = new Date(b['מתאריך']);
-                    return dateB - dateA; // Descending order
-                });
-
-                return sortedFilteredOrders.map(order => {
-                    const isClosed = order.closed === 'סגורה';
-                    const rowClass = isClosed ? 'table-row-closed' : 'table-row-open';
-                    const columns = [
-                        'מתאריך', 'תעודה', 'שם סוכן', 'שם לקוח', 'כתובת', 'סוג פעולה',
-                        'ימים שעברו', 'מס" מכולה ירדה', 'מס" מכולה עלתה', 'ימים שעברו (עלתה)',
-                        'closed', 'הערות'
-                    ];
-
-                    return (
-                        React.createElement('tr', { key: order.docId, className: rowClass, onClick: () => { setSelectedOrder(order); setIsDetailModalOpen(true); } },
-                            columns.map(col => {
-                                let value = order[col] || '';
-                                let tdClassName = 'px-4 py-2 whitespace-nowrap text-sm text-gray-800 border-b border-gray-200';
-
-                                if (col === 'מתאריך') {
-                                    value = formatDisplayDate(value);
-                                }
-
-                                if (col === 'closed') {
-                                    tdClassName += ` font-semibold ${value === 'פתוחה' ? 'text-green-600' : 'text-gray-500'}`;
-                                }
-                                
-                                // Conditional colors for 'מכולה ירדה' and 'מכולה עלתה'
-                                if (col === 'מס" מכולה ירדה' && value) {
-                                    tdClassName += ' bg-green-100 text-green-800 font-medium';
-                                }
-                                if (col === 'מס" מכולה עלתה' && value) {
-                                    tdClassName += ' bg-red-100 text-red-800 font-medium';
-                                }
-
-                                return React.createElement('td', { key: col, className: tdClassName }, value);
-                            }),
-                            React.createElement('td', { className: "px-4 py-2 whitespace-nowrap text-sm font-medium border-b border-gray-200" },
-                                React.createElement('div', { className: "flex flex-col sm:flex-row gap-2" },
-                                    React.createElement('button', { onClick: (e) => { e.stopPropagation(); setInitialOrderFormData(order); setIsOrderModalOpen(true); }, className: "btn bg-primary-600 hover:bg-primary-700 text-white p-2 text-sm rounded-md shadow-sm transition-all duration-200 flex items-center justify-center" },
-                                        React.createElement('i', { className: "fas fa-edit" }),
-                                        React.createElement('span', { className: "hidden sm:inline mr-1" }, "ערוך")
-                                    ),
-                                    React.createElement('button', { onClick: (e) => { e.stopPropagation(); handleDuplicateOrder(order.docId); }, className: "btn bg-secondary-600 hover:bg-secondary-700 text-white p-2 text-sm rounded-md shadow-sm transition-all duration-200 flex items-center justify-center" },
-                                        React.createElement('i', { className: "fas fa-copy" }),
-                                        React.createElement('span', { className: "hidden sm:inline mr-1" }, "שכפל")
-                                    ),
-                                    order.closed === 'פתוחה' && (
-                                        React.createElement('button', { onClick: (e) => { e.stopPropagation(); confirmCloseOrder(order.docId); }, className: "btn bg-primary-500 hover:bg-primary-600 text-white p-2 text-sm rounded-md shadow-sm transition-all duration-200 flex items-center justify-center" },
-                                            React.createElement('i', { className: "fas fa-check-circle" }),
-                                            React.createElement('span', { className: "hidden sm:inline mr-1" }, "סגור")
-                                        )
-                                    ),
-                                    React.createElement('button', { onClick: (e) => { e.stopPropagation(); confirmDeleteOrder(order.docId); }, className: "btn bg-danger-600 hover:bg-danger-700 text-white p-2 text-sm rounded-md shadow-sm transition-all duration-200 flex items-center justify-center" },
-                                        React.createElement('i', { className: "fas fa-trash" }),
-                                        React.createElement('span', { className: "hidden sm:inline mr-1" }, "מחק")
-                                    )
-                                )
-                            )
-                        )
-                    );
-                });
-            }, [filteredOrders, showGeneralModal, handleDuplicateOrder, confirmCloseOrder, confirmDeleteOrder]);
-
-
-            const applyFilter = React.useCallback(() => {
-                const clientName = filterCriteria.clientName.toLowerCase();
-                const address = filterCriteria.address.toLowerCase();
-                const actionType = filterCriteria.actionType;
-                const status = filterCriteria.status;
-                const searchDate = filterCriteria.date;
-
-                const allCombinedOrders = [...allOrders.openOrders, ...allOrders.closedOrders];
-
-                const newFilteredOrders = allCombinedOrders.filter(order => {
-                    const matchesClient = clientName === '' || (order['שם לקוח'] && order['שם לקוח'].toLowerCase().includes(clientName));
-                    const matchesAddress = address === '' || (order['כתובת'] && order['כתובת'].toLowerCase().includes(address));
-                    const matchesActionType = actionType === '' || order['סוג פעולה'] === actionType;
-                    const matchesStatus = status === '' || order['closed'] === status;
-
-                    let matchesDate = true;
-                    if (searchDate) {
-                        const orderDate = new Date(order['מתאריך']);
-                        const filterDate = new Date(searchDate);
-                        matchesDate = orderDate.toDateString() === filterDate.toDateString();
-                    }
-
-                    return matchesClient && matchesAddress && matchesActionType && matchesStatus && matchesDate;
-                });
-                setFilteredOrders(newFilteredOrders);
-            }, [filterCriteria, allOrders]);
-
-            const clearFilter = React.useCallback(() => {
-                setFilterCriteria({
-                    clientName: '', address: '', actionType: '', status: '', date: '',
-                });
-                setFilteredOrders([...allOrders.openOrders, ...allOrders.closedOrders]);
-            }, [allOrders]);
-            
-            // Chart logic
-            const renderCharts = React.useCallback(() => {
-                // Destroy existing charts if they exist
-                if (window.containersByClientChartInstance) {
-                    window.containersByClientChartInstance.destroy();
-                }
-                if (window.actionTypesChartInstance) {
-                    window.actionTypesChartInstance.destroy();
-                }
-                if (window.ordersByAgentChartInstance) {
-                    window.ordersByAgentChartInstance.destroy();
-                }
-                if (window.monthlyOrdersChartInstance) {
-                    window.monthlyOrdersChartInstance.destroy();
-                }
-
-
-                // Render Containers By Client Chart
-                const clientContainerCounts = {};
-                allOrders.openOrders.forEach(order => {
-                    if (order['שם לקוח'] && order['מס" מכולה עלתה']) {
-                        clientContainerCounts[order['שם לקוח']] = (clientContainerCounts[order['שם לקוח']] || 0) + 1;
-                    }
-                });
-                const containersByClientLabels = Object.keys(clientContainerCounts);
-                const containersByClientData = Object.values(clientContainerCounts);
-
-                const containersCtx = document.getElementById('containersByClientChart')?.getContext('2d');
-                if (containersCtx) {
-                    window.containersByClientChartInstance = new Chart(containersCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: containersByClientLabels,
-                            datasets: [{
-                                label: 'מספר מכולות בשימוש',
-                                data: containersByClientData,
-                                backgroundColor: 'rgba(26, 102, 102, 0.7)', // Darker primary teal
-                                borderColor: 'rgba(26, 102, 102, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: true, position: 'top', labels: { font: { family: 'Poppins' } } },
-                                title: { display: true, text: 'מכולות בשימוש לפי לקוח', font: { size: 16, family: 'Poppins' } }
-                            },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { font: { family: 'Poppins' } } },
-                                x: { ticks: { font: { family: 'Poppins' } } }
-                            }
-                        }
-                    });
-                }
-
-
-                // Render Action Types Chart
-                const actionTypeCounts = {};
-                const allCombinedOrdersForChart = [...allOrders.openOrders, ...allOrders.closedOrders];
-
-                allCombinedOrdersForChart.forEach(order => {
-                    const type = order['סוג פעולה'];
-                    if (type) actionTypeCounts[type] = (actionTypeCounts[type] || 0) + 1;
-                });
-
-                const actionTypeLabels = Object.keys(actionTypeCounts);
-                const actionTypeData = Object.values(actionTypeCounts);
-
-                const backgroundColors = [
-                    'rgba(255, 143, 64, 0.7)',  // Secondary orange
-                    'rgba(51, 176, 176, 0.7)',  // Primary teal
-                    'rgba(179, 235, 235, 0.7)',  // Primary light teal
-                    'rgba(224, 107, 29, 0.7)',   // Secondary dark orange
-                    'rgba(235, 124, 124, 0.7)',   // Danger red
-                    'rgba(129, 140, 248, 0.7)'  // Tailwind: indigo-400
-                ];
-                const borderColors = [
-                    'rgba(255, 143, 64, 1)',
-                    'rgba(51, 176, 176, 1)',
-                    'rgba(179, 235, 235, 1)',
-                    'rgba(224, 107, 29, 1)',
-                    'rgba(235, 124, 124, 1)',
-                    'rgba(129, 140, 248, 1)'
-                ];
-
-                const actionCtx = document.getElementById('actionTypesChart')?.getContext('2d');
-                if (actionCtx) {
-                    window.actionTypesChartInstance = new Chart(actionCtx, {
-                        type: 'pie',
-                        data: {
-                            labels: actionTypeLabels,
-                            datasets: [{
-                                label: 'מספר פעולות',
-                                data: actionTypeData,
-                                backgroundColor: backgroundColors.slice(0, actionTypeLabels.length),
-                                borderColor: borderColors.slice(0, actionTypeLabels.length),
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'top', labels: { font: { family: 'Poppins' } } },
-                                title: { display: true, text: 'חלוקת סוגי פעולות', font: { size: 16, family: 'Poppins' } }
-                            }
-                        }
-                    });
-                }
-
-                // New Chart: Orders by Agent
-                const agentOrderCounts = {};
-                allCombinedOrdersForChart.forEach(order => {
-                    const agent = order['שם סוכן'];
-                    if (agent) agentOrderCounts[agent] = (agentOrderCounts[agent] || 0) + 1;
-                });
-                const agentsLabels = Object.keys(agentOrderCounts);
-                const agentsData = Object.values(agentOrderCounts);
-
-                const agentsCtx = document.getElementById('ordersByAgentChart')?.getContext('2d');
-                if (agentsCtx) {
-                    window.ordersByAgentChartInstance = new Chart(agentsCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: agentsLabels,
-                            datasets: [{
-                                label: 'מספר הזמנות',
-                                data: agentsData,
-                                backgroundColor: 'rgba(51, 176, 176, 0.7)', // Primary teal
-                                borderColor: 'rgba(51, 176, 176, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: true, position: 'top', labels: { font: { family: 'Poppins' } } },
-                                title: { display: true, text: 'הזמנות לפי סוכן', font: { size: 16, family: 'Poppins' } }
-                            },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { font: { family: 'Poppins' } } },
-                                x: { ticks: { font: { family: 'Poppins' } } }
-                            }
-                        }
-                    });
-                }
-
-                // New Chart: Monthly Order Count
-                const monthlyOrderCounts = {};
-                allCombinedOrdersForChart.forEach(order => {
-                    if (order['מתאריך']) {
-                        const date = new Date(order['מתאריך']);
-                        const monthYear = `${date.toLocaleString('he-IL', { month: 'short', year: 'numeric' })}`;
-                        monthlyOrderCounts[monthYear] = (monthlyOrderCounts[monthYear] || 0) + 1;
-                    }
-                });
-
-                // Sort months chronologically
-                const sortedMonths = Object.keys(monthlyOrderCounts).sort((a, b) => {
-                    const [monthA, yearA] = a.split(' ');
-                    const [monthB, yearB] = b.split(' ');
-                    const dateA = new Date(`${monthA} 1, ${yearA}`);
-                    const dateB = new Date(`${monthB} 1, ${yearB}`);
-                    return dateA - dateB;
-                });
-
-                const monthlyLabels = sortedMonths;
-                const monthlyData = sortedMonths.map(month => monthlyOrderCounts[month]);
-
-                const monthlyCtx = document.getElementById('monthlyOrdersChart')?.getContext('2d');
-                if (monthlyCtx) {
-                    window.monthlyOrdersChartInstance = new Chart(monthlyCtx, {
-                        type: 'line',
-                        data: {
-                            labels: monthlyLabels,
-                            datasets: [{
-                                label: 'כמות הזמנות חודשית',
-                                data: monthlyData,
-                                borderColor: 'rgba(255, 143, 64, 0.8)', // Secondary orange
-                                backgroundColor: 'rgba(255, 143, 64, 0.2)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: true, position: 'top', labels: { font: { family: 'Poppins' } } },
-                                title: { display: true, text: 'כמות הזמנות לפי חודש', font: { size: 16, family: 'Poppins' } }
-                            },
-                            scales: {
-                                y: { beginAtZero: true, ticks: { font: { family: 'Poppins' } } },
-                                x: { ticks: { font: { family: 'Poppins' } } }
-                            }
-                        }
-                    });
-                }
-
-            }, [allOrders]);
-
-            React.useEffect(() => {
-                renderCharts();
-            }, [allOrders, renderCharts]);
-
-
-            const runAlertChecks = React.useCallback((ordersData) => {
-                const alerts = [];
-                // Check for duplicate clients
-                const clientNames = {};
-                ordersData.openOrders.forEach(order => {
-                    const client = order['שם לקוח'];
-                    if (client) clientNames[client] = (clientNames[client] || 0) + 1;
-                });
-                for (const client in clientNames) {
-                    if (clientNames[client] > 1) {
-                        alerts.push(`לקוח כפול: הלקוח "${client}" מופיע ${clientNames[client]} פעמים בהזמנות פתוחות.`);
-                    }
-                }
-                // Check for duplicate containers
-                const containerIds = {};
-                ordersData.openOrders.forEach(order => {
-                    const containerAdded = order['מס" מכולה עלתה'];
-                    if (containerAdded) containerIds[containerAdded] = (containerIds[containerAdded] || 0) + 1;
-                });
-                for (const container in containerIds) {
-                    if (containerIds[container] > 1) {
-                        alerts.push(`מכולה כפולה: מכולה מספר "${container}" מופיעה ${containerIds[container]} פעמים בהזמנות פתוחות.`);
-                    }
-                }
-                // Check for exceeding rental days
-                ordersData.openOrders.forEach(order => {
-                    const daysPassedAdded = parseInt(order['ימים שעברו (עלתה)']);
-                    if (order['closed'] === 'פתוחה' && daysPassedAdded >= 7) {
-                        alerts.push(`חריגה בימי שכירות: הזמנה ללקוח "${order['שם לקוח']}" (תעודה: ${order['תעודה']}) חורגת בימי השכירות (${daysPassedAdded} ימים).`);
-                    }
-                });
-
-                if (alerts.length > 0) {
-                    const alertsHtml = alerts.map(alert => `<li class="mb-2">${alert}</li>`).join('');
-                    showGeneralModal(
-                        'התראות מערכת',
-                        `<ul class="list-disc list-inside text-right">${alertsHtml}</ul>`
-                    );
-                }
-            }, [showGeneralModal]);
-
-
-            return (
-                React.createElement('div', { className: "bg-gray-50 min-h-screen flex flex-col font-poppins" },
-                    loading && React.createElement(LoadingOverlay, null),
-                    React.createElement('div', { className: "app-header" },
-                        React.createElement('div', { className: "logo-text" },
-                            React.createElement('i', { className: "fas fa-boxes text-primary-700" }),
-                            React.createElement('span', null, "ניהול מכולות מתקדם")
-                        ),
-                        React.createElement('div', { className: "flex flex-col items-end gap-1" },
-                            React.createElement('div', { id: "datetime", className: "datetime-display" }, currentDateTime),
-                            userId && React.createElement('div', { className: "text-xs text-gray-600 font-medium" }, `מזהה משתמש: ${userId}`)
-                        )
-                    ),
-
-                    dashboardData.exceedingOrdersCount > 0 && (
-                        React.createElement('div', {
-                            id: "alertBanner",
-                            className: "alert-banner",
-                            onClick: () => {
-                                setFilterCriteria(prev => ({ ...prev, status: 'פתוחה' }));
-                                applyFilter();
-                                showGeneralModal('הזמנות חורגות', 'הטבלה סוננה להצגת הזמנות פתוחות שחורגות מימי השכירות.');
-                            }
-                        },
-                            React.createElement('p', null,
-                                React.createElement('i', { className: "fas fa-exclamation-triangle ml-2" }), " ישנן ",
-                                React.createElement('span', { id: "exceedingOrdersCount" }, dashboardData.exceedingOrdersCount), " הזמנות חורגות. לחץ לסינון מהיר."
-                            )
-                        )
-                    ),
-
-                    React.createElement('div', { className: "container mx-auto px-4 md:px-8 py-6 main-content" },
-                        React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" },
-                            React.createElement('div', { className: "glass-card flex items-center justify-between p-6" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-gray-600 text-sm" }, "הזמנות פתוחות"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-primary-600" }, dashboardData.openCount)
-                                ),
-                                React.createElement('i', { className: "fas fa-box-open text-4xl text-primary-400 opacity-70" })
-                            ),
-                            React.createElement('div', { className: "glass-card flex items-center justify-between p-6" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-gray-600 text-sm" }, "הזמנות חורגות"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-danger-600" }, dashboardData.exceedingOrdersCount)
-                                ),
-                                React.createElement('i', { className: "fas fa-bell text-4xl text-danger-400 opacity-70" })
-                            ),
-                            React.createElement('div', { className: "glass-card flex items-center justify-between p-6" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-gray-600 text-sm" }, "מכולות בשימוש"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-secondary-600" }, dashboardData.inUseContainersCount)
-                                ),
-                                React.createElement('i', { className: "fas fa-shipping-fast text-4xl text-secondary-400 opacity-70" })
-                            ),
-                            React.createElement('div', { className: "glass-card flex items-center justify-between p-6" },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "text-gray-600 text-sm" }, "לקוחות פעילים"),
-                                    React.createElement('p', { className: "text-2xl font-bold text-secondary-600" }, dashboardData.activeCustomersCount)
-                                ),
-                                React.createElement('i', { className: "fas fa-users text-4xl text-secondary-400 opacity-70" })
-                            )
-                        ),
-
-                        React.createElement('div', { className: "flex justify-end mb-6" },
-                            React.createElement('button', {
-                                id: "addOrderBtn",
-                                className: "btn bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 flex items-center",
-                                onClick: () => { setInitialOrderFormData(null); setIsOrderModalOpen(true); }
-                            },
-                                React.createElement('i', { className: "fas fa-plus ml-2" }), " הוסף הזמנה חדשה"
-                            )
-                        ),
-
-                        React.createElement('div', { className: "glass-card p-6 mb-8" },
-                            React.createElement('h2', { className: "text-xl font-semibold text-gray-700 mb-4" }, "חיפוש וסינון הזמנות"),
-                            React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" },
-                                React.createElement('div', null,
-                                    React.createElement('label', { htmlFor: "searchClientName", className: "block text-gray-700 text-sm font-bold mb-2" }, "שם לקוח:"),
-                                    React.createElement('input', {
-                                        type: "text",
-                                        id: "searchClientName",
-                                        placeholder: "הכנס שם לקוח",
-                                        className: "input-field",
-                                        value: filterCriteria.clientName,
-                                        onChange: (e) => setFilterCriteria(prev => ({ ...prev, clientName: e.target.value }))
-                                    })
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('label', { htmlFor: "searchAddress", className: "block text-gray-700 text-sm font-bold mb-2" }, "כתובת:"),
-                                    React.createElement('input', {
-                                        type: "text",
-                                        id: "searchAddress",
-                                        placeholder: "הכנס כתובת",
-                                        className: "input-field",
-                                        value: filterCriteria.address,
-                                        onChange: (e) => setFilterCriteria(prev => ({ ...prev, address: e.target.value }))
-                                    })
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('label', { htmlFor: "searchActionType", className: "block text-gray-700 text-sm font-bold mb-2" }, "סוג פעולה:"),
-                                    React.createElement('select', {
-                                        id: "searchActionType",
-                                        className: "input-field",
-                                        value: filterCriteria.actionType,
-                                        onChange: (e) => setFilterCriteria(prev => ({ ...prev, actionType: e.target.value }))
-                                    },
-                                        React.createElement('option', { value: "" }, "הכל"),
-                                        React.createElement('option', { value: "הצבה" }, "הצבה"),
-                                        React.createElement('option', { value: "הוצאה" }, "הוצאה"),
-                                        React.createElement('option', { value: "פינוי במקום" }, "פינוי במקום"),
-                                        React.createElement('option', { value: "החלפה" }, "החלפה")
-                                    )
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('label', { htmlFor: "searchStatus", className: "block text-gray-700 text-sm font-bold mb-2" }, "סטטוס:"),
-                                    React.createElement('select', {
-                                        id: "searchStatus",
-                                        className: "input-field",
-                                        value: filterCriteria.status,
-                                        onChange: (e) => setFilterCriteria(prev => ({ ...prev, status: e.target.value }))
-                                    },
-                                        React.createElement('option', { value: "" }, "הכל"),
-                                        React.createElement('option', { value: "פתוחה" }, "פתוחה"),
-                                        React.createElement('option', { value: "סגורה" }, "סגורה")
-                                    )
-                                ),
-                                React.createElement('div', null,
-                                    React.createElement('label', { htmlFor: "searchDate", className: "block text-gray-700 text-sm font-bold mb-2" }, "תאריך (מתאריך):"),
-                                    React.createElement('input', {
-                                        type: "date",
-                                        id: "searchDate",
-                                        className: "input-field",
-                                        value: filterCriteria.date,
-                                        onChange: (e) => setFilterCriteria(prev => ({ ...prev, date: e.target.value }))
-                                    })
-                                )
-                            ),
-
-                            React.createElement('div', { className: "mt-6 flex justify-end gap-4" },
-                                React.createElement('button', { className: "btn bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1", onClick: applyFilter }, "הפעל סינון"),
-                                React.createElement('button', { className: "btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1", onClick: clearFilter }, "נקה סינון")
-                            )
-                        ),
-
-                        React.createElement('div', { className: "glass-card p-6 mb-8" },
-                            React.createElement('h2', { className: "text-xl font-semibold text-gray-700 mb-4" }, "טבלת הזמנות"),
-                            React.createElement('div', { id: "ordersTableContainer" },
-                                React.createElement('table', { id: "ordersTable", className: "w-full" },
-                                    React.createElement('thead', null,
-                                        React.createElement('tr', null,
-                                            React.createElement('th', null, "מתאריך"),
-                                            React.createElement('th', null, "תעודה"),
-                                            React.createElement('th', null, "שם סוכן"),
-                                            React.createElement('th', null, "שם לקוח"),
-                                            React.createElement('th', null, "כתובת"),
-                                            React.createElement('th', null, "סוג פעולה"),
-                                            React.createElement('th', null, "ימים שעברו (ירדה)"),
-                                            React.createElement('th', null, "מס\" מכולה ירדה"),
-                                            React.createElement('th', null, "מס\" מכולה עלתה"),
-                                            React.createElement('th', null, "ימים שעברו (עלתה)"),
-                                            React.createElement('th', null, "סטטוס"),
-                                            React.createElement('th', null, "הערות"),
-                                            React.createElement('th', null, "פעולות")
-                                        )
-                                    ),
-                                    React.createElement('tbody', { id: "ordersTableBody" },
-                                        renderOrdersTable()
-                                    )
-                                )
-                            )
-                        ),
-
-                        React.createElement('div', { className: "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8" },
-                            React.createElement('div', { className: "glass-card p-6" },
-                                React.createElement('h2', { className: "text-xl font-semibold text-gray-700 mb-4" }, "מכולות בשימוש לפי לקוחות"),
-                                React.createElement('div', { className: "h-80" },
-                                    React.createElement('canvas', { id: "containersByClientChart" })
-                                )
-                            ),
-                            React.createElement('div', { className: "glass-card p-6" },
-                                React.createElement('h2', { className: "text-xl font-semibold text-gray-700 mb-4" }, "סוגי פעולות"),
-                                React.createElement('div', { className: "h-80" },
-                                    React.createElement('canvas', { id: "actionTypesChart" })
-                                )
-                            ),
-                            React.createElement('div', { className: "glass-card p-6" },
-                                React.createElement('h2', { className: "text-xl font-semibold text-gray-700 mb-4" }, "הזמנות לפי סוכן"),
-                                React.createElement('div', { className: "h-80" },
-                                    React.createElement('canvas', { id: "ordersByAgentChart" })
-                                )
-                            ),
-                            React.createElement('div', { className: "glass-card p-6" },
-                                React.createElement('h2', { className: "text-xl font-semibold text-gray-700 mb-4" }, "הזמנות חודשיות"),
-                                React.createElement('div', { className: "h-80" },
-                                    React.createElement('canvas', { id: "monthlyOrdersChart" })
-                                )
-                            )
-                        )
-                    ),
-
-                    React.createElement(OrderFormModal, {
-                        isOpen: isOrderModalOpen,
-                        onClose: () => setIsOrderModalOpen(false),
-                        onSubmit: handleOrderSubmit,
-                        initialData: initialOrderFormData
-                    }),
-
-                    React.createElement(OrderDetailsModal, {
-                        isOpen: isDetailModalOpen,
-                        onClose: () => setIsDetailModalOpen(false),
-                        order: selectedOrder,
-                        onEdit: (order) => { setSelectedOrder(order); setIsOrderModalOpen(true); setIsDetailModalOpen(false); setInitialOrderFormData(order); },
-                        onDuplicate: handleDuplicateOrder,
-                        onCloseOrder: confirmCloseOrder,
-                        onDelete: confirmDeleteOrder
-                    }),
-
-                    React.createElement(GeneralModal, {
-                        title: generalModalContent.title,
-                        message: generalModalContent.message,
-                        isOpen: isGeneralModalOpen,
-                        onClose: () => setIsGeneralModalOpen(false),
-                        isConfirm: generalModalContent.isConfirm,
-                        onConfirm: () => {
-                            if (generalModalContent.onConfirm) generalModalContent.onConfirm();
-                            setIsGeneralModalOpen(false);
-                        }
-                    })
-                )
-            );
+            }
+            return data;
+        } catch (error) {
+            showAlert('שגיאת תקשורת עם השרת.', 'error');
+            return { success: false, message: error.message };
+        } finally {
+            hideLoader();
         }
+    }
 
-        // Render the App component to the root div
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(App, null));
-    </script>
+    async function loadOrders() {
+        const response = await fetchData('list', { status: 'all' });
+        if (response.success) {
+            allOrders = response.data;
+            updateDashboard();
+            filterTable();
+            updateContainerInventory();
+            renderTreatmentBoard();
+        }
+    }
+
+    function updateDashboard() {
+        const openOrders = allOrders.filter(o => o['סטטוס'] !== 'סגור');
+        // Explicitly convert to string before splitting
+        const containersInUse = new Set(openOrders.flatMap(o => String(o['מספר מכולה ירדה'] || '').split(',').map(c => c.trim()).filter(Boolean)));
+        const overdueOrders = allOrders.filter(o => o['סטטוס'] === 'חורג');
+        const activeCustomers = new Set(openOrders.map(o => o['שם לקוח']));
+
+        document.getElementById('open-orders-count').textContent = openOrders.length;
+        document.getElementById('overdue-orders-count').textContent = overdueOrders.length;
+        document.getElementById('containers-in-use').textContent = containersInUse.size;
+        document.getElementById('active-customers-count').textContent = activeCustomers.size;
+        document.getElementById('overdue-customers-badge').textContent = overdueOrders.length;
+        
+        drawCharts();
+    }
+
+    function renderOrdersTable(ordersToRender) {
+        const tableBody = document.querySelector('#orders-table tbody');
+        tableBody.innerHTML = '';
+        ordersToRender.forEach(order => {
+            const row = tableBody.insertRow();
+            row.className = 'border-b border-[var(--color-border)] transition-colors';
+            if (order['סטטוס'] !== 'סגור' && order['ימים שעברו'] > 110) row.classList.add('overdue-110-days');
+
+            // Explicitly convert to string before splitting
+            const containers = new Set([
+                ...String(order['מספר מכולה ירדה'] || '').split(','),
+                ...String(order['מספר מכולה עלתה'] || '').split(',')
+            ]);
+            const containerHTML = [...containers].filter(Boolean).map(c => `<span class="inline-block bg-[var(--color-secondary)] text-white text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">${c.trim()}</span>`).join('');
+            
+            row.innerHTML = `
+                <td class="p-3">${formatDate(order['תאריך הזמנה'])}</td>
+                <td class="p-3">${order['תעודה'] || ''}</td>
+                <td class="p-3 font-medium">${order['שם לקוח'] || ''}</td>
+                <td class="p-3">${order['כתובת'] || ''}</td>
+                <td class="p-3">${order['סוג פעולה'] || ''}</td>
+                <td class="p-3">${order['ימים שעברו'] || ''}</td>
+                <td class="p-3">${containerHTML}</td>
+                <td class="p-3"><span class="status-${(order['סטטוס'] || '').replace(/[/ ]/g, '-').toLowerCase()}">${order['סטטוס'] || ''}</span></td>
+                <td class="p-3">
+                    <button class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)]" onclick="openOrderModal('edit', ${order.sheetRow})"><i class="fas fa-edit"></i></button>
+                    <button class="text-[var(--color-text-muted)] hover:text-[var(--color-danger)] mr-2" onclick="openDeleteConfirmModal(${order.sheetRow}, '${order['תעודה']}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+    }
+
+    function filterTable(statusFilterParam = null, actionTypeFilterParam = null) {
+        const searchText = document.getElementById('search-input').value.toLowerCase();
+        const filterStatus = statusFilterParam !== null ? statusFilterParam : document.getElementById('filter-status').value;
+        document.getElementById('filter-status').value = filterStatus;
+
+        const filtered = allOrders.filter(order => {
+            const matchesSearch = Object.values(order).some(val => String(val).toLowerCase().includes(searchText));
+            const matchesStatus = filterStatus === 'all' || order['סטטוס'] === filterStatus;
+            return matchesSearch && matchesStatus;
+        });
+        renderOrdersTable(filtered);
+    }
+    
+    function formatDate(dateInput) {
+        if (!dateInput) return '';
+        const date = new Date(dateInput);
+        if (isNaN(date.getTime())) return dateInput;
+        return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function openOrderModal(mode, sheetRow = null) {
+        const modal = document.getElementById('order-modal');
+        const form = document.getElementById('order-form');
+        form.reset();
+        currentEditingOrder = null;
+        autoFillData = null;
+
+        if (mode === 'add') {
+            document.getElementById('modal-title').textContent = 'הוסף הזמנה חדשה';
+            document.getElementById('תאריך הזמנה').valueAsDate = new Date();
+            form.onsubmit = e => { e.preventDefault(); addOrder(); };
+        } else if (mode === 'edit' && sheetRow) {
+            document.getElementById('modal-title').textContent = 'ערוך הזמנה';
+            currentEditingOrder = allOrders.find(order => order.sheetRow === sheetRow);
+            if (currentEditingOrder) {
+                Object.keys(currentEditingOrder).forEach(key => {
+                    const input = form.elements[key];
+                    if (input) {
+                        if (input.type === 'date' && currentEditingOrder[key]) {
+                            input.value = new Date(currentEditingOrder[key]).toISOString().split('T')[0];
+                        } else {
+                            input.value = currentEditingOrder[key];
+                        }
+                    }
+                });
+                form.onsubmit = e => { e.preventDefault(); editOrder(sheetRow); };
+            }
+        }
+        handleActionTypeChange();
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+    }
+
+    function closeOrderModal() {
+        const modal = document.getElementById('order-modal');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.add('scale-95');
+    }
+
+    function handleActionTypeChange() {
+        const actionType = document.getElementById('סוג פעולה').value;
+        const takenDiv = document.getElementById('container-taken-div');
+        const broughtDiv = document.getElementById('container-brought-div');
+        takenDiv.classList.toggle('hidden', !['הורדה', 'החלפה'].includes(actionType));
+        broughtDiv.classList.toggle('hidden', !['העלאה', 'החלפה'].includes(actionType));
+    }
+
+    async function addOrder() {
+        const form = document.getElementById('order-form');
+        const formData = new FormData(form);
+        const orderData = Object.fromEntries(formData.entries());
+        const response = await fetchData('add', { data: JSON.stringify(orderData) });
+        if (response.success) {
+            showAlert(response.message, 'success');
+            closeOrderModal();
+            loadOrders();
+        } else {
+            showAlert(response.message || 'שגיאה בהוספת הזמנה', 'error');
+        }
+    }
+
+    async function editOrder(sheetRow) {
+        const form = document.getElementById('order-form');
+        const formData = new FormData(form);
+        const updateData = Object.fromEntries(formData.entries());
+        const response = await fetchData('edit', { id: sheetRow, data: JSON.stringify(updateData) });
+        if (response.success) {
+            showAlert(response.message, 'success');
+            closeOrderModal();
+            loadOrders();
+        } else {
+            showAlert(response.message || 'שגיאה בעדכון הזמנה', 'error');
+        }
+    }
+
+    function openDeleteConfirmModal(sheetRow, orderId) {
+        document.getElementById('delete-order-id').textContent = orderId;
+        document.getElementById('confirm-delete-btn').onclick = () => deleteOrder(sheetRow);
+        const modal = document.getElementById('delete-confirm-modal');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+    }
+
+    function closeDeleteConfirmModal() {
+        const modal = document.getElementById('delete-confirm-modal');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.add('scale-95');
+    }
+
+    async function deleteOrder(sheetRow) {
+        const response = await fetchData('delete', { id: sheetRow });
+        if (response.success) {
+            showAlert(response.message, 'success');
+            closeDeleteConfirmModal();
+            loadOrders();
+        } else {
+            showAlert(response.message || 'שגיאה במחיקת הזמנה', 'error');
+        }
+    }
+    
+    function checkCustomerExistenceAndAutofill() {
+        const customerName = document.getElementById('שם לקוח').value.trim();
+        const address = document.getElementById('כתובת').value.trim();
+        if (!customerName || !address) return;
+
+        const latestOrder = allOrders
+            .filter(o => o['שם לקוח'] === customerName && o['כתובת'] === address)
+            .sort((a, b) => new Date(b['תאריך הזמנה']) - new Date(a['תאריך הזמנה']))[0];
+        
+        if (latestOrder && !currentEditingOrder) {
+            autoFillData = latestOrder;
+            const modal = document.getElementById('autofill-confirm-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('.modal-content').classList.remove('scale-95');
+        }
+    }
+
+    function confirmAutofill(confirm) {
+        if (confirm && autoFillData) {
+            Object.keys(autoFillData).forEach(key => {
+                const input = document.getElementById(key);
+                if (input && !['שם לקוח', 'כתובת'].includes(key)) {
+                     if (input.type === 'date' && autoFillData[key]) {
+                        input.value = new Date(autoFillData[key]).toISOString().split('T')[0];
+                    } else {
+                        input.value = autoFillData[key];
+                    }
+                }
+            });
+            handleActionTypeChange();
+        }
+        const modal = document.getElementById('autofill-confirm-modal');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.add('scale-95');
+        autoFillData = null;
+    }
+
+    function drawCharts() {
+        const customerData = allOrders.reduce((acc, order) => {
+            if (order['סטטוס'] !== 'סגור') {
+                // Explicitly convert to string before splitting
+                const count = String(order['מספר מכולה ירדה'] || '').split(',').filter(Boolean).length;
+                if (count > 0) {
+                    acc[order['שם לקוח']] = (acc[order['שם לקוח']] || 0) + count;
+                }
+            }
+            return acc;
+        }, {});
+        const sortedCustomers = Object.entries(customerData).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+        const statusData = allOrders.reduce((acc, order) => {
+            const status = order['סטטוס'] || 'לא ידוע';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+        }, {});
+
+        const chartColors = {
+            'פתוח': 'rgba(39, 174, 96, 0.7)',
+            'חורג': 'rgba(192, 57, 43, 0.7)',
+            'סגור': 'rgba(127, 140, 141, 0.7)',
+            'ממתין/לא תקין': 'rgba(41, 128, 185, 0.7)'
+        };
+
+        if (charts.customerChart) charts.customerChart.destroy();
+        charts.customerChart = new Chart(document.getElementById('chart-containers-by-customer').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: sortedCustomers.map(c => c[0]),
+                datasets: [{
+                    label: 'מכולות בשימוש',
+                    data: sortedCustomers.map(c => c[1]),
+                    backgroundColor: 'rgba(58, 90, 64, 0.7)',
+                    borderColor: 'rgba(58, 90, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        if (charts.statusChart) charts.statusChart.destroy();
+        charts.statusChart = new Chart(document.getElementById('chart-status-pie').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statusData),
+                datasets: [{
+                    data: Object.values(statusData),
+                    backgroundColor: Object.keys(statusData).map(status => chartColors[status] || '#bdc3c7'),
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+
+    function updateContainerInventory() {
+        const inUseTableBody = document.querySelector('#containers-in-use-table tbody');
+        const availableTableBody = document.querySelector('#containers-available-table tbody');
+        inUseTableBody.innerHTML = '';
+        availableTableBody.innerHTML = '';
+
+        const containerStates = {};
+        allOrders.forEach(order => {
+            // Explicitly convert to string before splitting
+            const containers = String(order['מספר מכולה ירדה'] || '').split(',').filter(Boolean);
+            containers.forEach(c => {
+                if (order['סטטוס'] !== 'סגור') {
+                    containerStates[c.trim()] = { status: 'בשימוש', order };
+                } else if (containerStates[c.trim()]?.status !== 'בשימוש') {
+                    containerStates[c.trim()] = { status: 'פנוי', order };
+                }
+            });
+        });
+
+        Object.entries(containerStates).forEach(([num, state]) => {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-[var(--color-border)]';
+            if (state.status === 'בשימוש') {
+                row.innerHTML = `<td class="p-2">${num}</td><td class="p-2">${state.order['שם לקוח']}</td><td class="p-2">${formatDate(state.order['תאריך הזמנה'])}</td>`;
+                inUseTableBody.appendChild(row);
+            } else {
+                row.innerHTML = `<td class="p-2">${num}</td><td class="p-2">${formatDate(state.order['תאריך סגירה'] || state.order['תאריך הזמנה'])}</td>`;
+                availableTableBody.appendChild(row);
+            }
+        });
+    }
+
+    function renderTreatmentBoard() {
+        const columns = {
+            overdue: document.getElementById('column-overdue'),
+            'in-progress': document.getElementById('column-in-progress'),
+            resolved: document.getElementById('column-resolved'),
+        };
+        Object.values(columns).forEach(col => col.querySelectorAll('.kanban-item').forEach(item => item.remove()));
+
+        const ordersForTreatment = allOrders.filter(o => ['חורג', 'ממתין/לא תקין'].includes(o['סטטוס']));
+        document.getElementById('no-treatment-orders').classList.toggle('hidden', ordersForTreatment.length > 0);
+
+        ordersForTreatment.forEach(order => {
+            const item = document.createElement('div');
+            item.className = 'kanban-item card p-4 cursor-grab';
+            item.draggable = true;
+            item.dataset.sheetRow = order.sheetRow;
+            item.ondragstart = e => e.dataTransfer.setData('text/plain', order.sheetRow);
+            item.innerHTML = `
+                <p class="font-bold">${order['שם לקוח']}</p>
+                <p class="text-sm text-[var(--color-text-muted)]">${order['תעודה']}</p>
+                <p class="text-sm mt-2"><span class="font-semibold text-[var(--color-danger)]">${order['ימים שעברו'] || 0}</span> ימים</p>
+            `;
+            const targetColumn = order['סטטוס'] === 'חורג' ? 'overdue' : 'in-progress';
+            columns[targetColumn].appendChild(item);
+        });
+    }
+    
+    function allowDrop(event) { event.preventDefault(); }
+
+    async function drop(event) {
+        event.preventDefault();
+        const sheetRow = event.dataTransfer.getData('text/plain');
+        const targetColumn = event.currentTarget;
+        const statusMap = {
+            'column-overdue': 'חורג',
+            'column-in-progress': 'ממתין/לא תקין',
+            'column-resolved': 'סגור'
+        };
+        const newStatus = statusMap[targetColumn.id];
+        if (!newStatus) return;
+
+        const updateData = { 'סטטוס': newStatus };
+        if (newStatus === 'סגור') {
+            updateData['תאריך סגירה'] = new Date().toISOString().split('T')[0];
+        }
+        
+        const response = await fetchData('edit', { id: sheetRow, data: JSON.stringify(updateData) });
+        if (response.success) {
+            showAlert('סטטוס הזמנה עודכן', 'success');
+            loadOrders();
+        } else {
+            showAlert('שגיאה בעדכון סטטוס', 'error');
+        }
+    }
+
+    function refreshData() {
+        showAlert('מרענן נתונים...', 'info');
+        loadOrders();
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`${pageId}-page`).classList.remove('hidden');
+        document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.toggle('active', b.id === `nav-${pageId}`));
+    }
+
+    window.onload = () => {
+        initializeTheme();
+        loadOrders();
+    };
+</script>
+
 </body>
 </html>
