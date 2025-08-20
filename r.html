@@ -919,13 +919,17 @@
         showLoader();
         const urlParams = new URLSearchParams({ action, ...params });
         const url = `${SCRIPT_WEB_APP_URL}?${urlParams.toString()}`;
+        console.log(`[fetchData] Fetching: ${url}`); // DEBUG: Log the URL being fetched
         try {
             const response = await fetch(url);
+            console.log(`[fetchData] Response status: ${response.status}`); // DEBUG: Log response status
             const data = await response.json();
+            console.log(`[fetchData] Response data:`, data); // DEBUG: Log full response data
             // טיפול בשגיאות "Service invoked too many times" באמצעות exponential backoff
             if (!data.success && data.message && data.message.includes('Service invoked too many times')) {
                 const delay = Math.pow(2, retries) * 1000;
                 if (retries < 5) { // מקסימום 5 ניסיונות חוזרים
+                    console.warn(`[fetchData] Service invoked too many times, retrying in ${delay}ms... (Attempt ${retries + 1})`); // DEBUG: Log retry attempt
                     await new Promise(resolve => setTimeout(resolve, delay));
                     return fetchData(action, params, retries + 1);
                 } else {
@@ -935,7 +939,7 @@
             return data;
         } catch (error) {
             showAlert('שגיאת תקשורת עם השרת.', 'error');
-            console.error("Fetch error:", error);
+            console.error("[fetchData] Fetch error:", error); // DEBUG: Log detailed fetch error
             return { success: false, message: error.message };
         } finally {
             hideLoader();
@@ -952,17 +956,18 @@
             const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
-                console.log("WhatsApp message logged successfully.");
+                console.log("[logWhatsAppMessage] WhatsApp message logged successfully.");
             } else {
-                console.error("Failed to log WhatsApp message:", data.message);
+                console.error("[logWhatsAppMessage] Failed to log WhatsApp message:", data.message);
             }
         } catch (error) {
-            console.error("Error logging WhatsApp message:", error);
+            console.error("[logWhatsAppMessage] Error logging WhatsApp message:", error);
         }
     }
 
     // טעינת ההזמנות מהשרת ועיבודן
     async function loadOrders() {
+        console.log("[loadOrders] Starting to load orders..."); // DEBUG
         const response = await fetchData('list', { status: 'all' });
         if (response.success) {
             allOrders = response.data.map(order => {
@@ -984,6 +989,7 @@
                 order['Kanban Status'] = order['Kanban Status'] || null; 
                 return order;
             });
+            console.log("[loadOrders] Orders loaded successfully. Total:", allOrders.length); // DEBUG
             updateDashboard(); // עדכון לוח המחוונים
             filterTable(); // סינון ורינדור הטבלה
             updateContainerInventory(); // עדכון מלאי המכולות
@@ -991,6 +997,7 @@
             populateAgentFilter(); // אכלוס פילטר הסוכנים
         } else {
             showAlert(response.message || 'שגיאה בטעינת הזמנות.', 'error');
+            console.error("[loadOrders] Failed to load orders:", response.message); // DEBUG
         }
     }
 
@@ -1237,20 +1244,24 @@
             return (order._effectiveStatus === 'פתוח' || order._effectiveStatus === 'חורג') && isTaken && !isBrought;
         });
         
-        return !isContainerCurrentlyInuse; // True אם המכולה אינה בשימוש כרגע
+        return !isContainerCurrentlyInUse; // True אם המכולה אינה בשימוש כרגע
     }
 
     // פתיחת מודל ההזמנה (הוספה/עריכה/שכפול)
     function openOrderModal(mode, sheetRow = null) {
         const form = document.getElementById('order-form');
         form.reset(); // איפוס הטופס
-        currentEditingOrder = null;
+        currentEditingOrder = null; // ודא שמשתנה זה מאופס להוספה
         autoFillData = null;
 
         if (mode === 'add') {
             document.getElementById('modal-title').textContent = 'הוסף הזמנה חדשה';
             document.getElementById('תאריך הזמנה').valueAsDate = new Date(); // תאריך ברירת מחדל: היום
-            form.onsubmit = async e => { e.preventDefault(); await addOrder(); };
+            form.onsubmit = async e => {
+                e.preventDefault();
+                console.log("[openOrderModal] Add order form submitted."); // DEBUG
+                await addOrder();
+            };
         } else if (mode === 'edit' && sheetRow) {
             document.getElementById('modal-title').textContent = 'ערוך הזמנה';
             currentEditingOrder = allOrders.find(order => order.sheetRow === sheetRow);
@@ -1265,7 +1276,11 @@
                         }
                     }
                 });
-                form.onsubmit = async e => { e.preventDefault(); await editOrder(sheetRow); };
+                form.onsubmit = async e => {
+                    e.preventDefault();
+                    console.log("[openOrderModal] Edit order form submitted."); // DEBUG
+                    await editOrder(sheetRow);
+                };
             }
         } else if (mode === 'duplicate' && sheetRow) {
             document.getElementById('modal-title').textContent = 'שכפל הזמנה';
@@ -1284,11 +1299,16 @@
                 });
                 document.getElementById('תאריך הזמנה').valueAsDate = new Date(); // תאריך חדש עבור הזמנה משוכפלת
                 document.getElementById('תעודה').value = ''; // נקה מספר תעודה
-                form.onsubmit = async e => { e.preventDefault(); await addOrder(); }; // טפל כהזמנה חדשה
+                form.onsubmit = async e => {
+                    e.preventDefault();
+                    console.log("[openOrderModal] Duplicate order form submitted."); // DEBUG
+                    await addOrder();
+                }; // טפל כהזמנה חדשה
             }
         }
         handleActionTypeChange(); // עדכן שדות מכולה לפי סוג פעולה
         openModal('order-modal');
+        console.log(`[openOrderModal] Opened modal in ${mode} mode for sheetRow: ${sheetRow}`); // DEBUG
     }
 
     // טיפול בשינוי סוג הפעולה במודל ההזמנה (הצגת/הסתרת שדות מכולה)
@@ -1298,55 +1318,85 @@
         const broughtDiv = document.getElementById('container-brought-div');
         takenDiv.classList.toggle('hidden', !['הורדה', 'החלפה'].includes(actionType));
         broughtDiv.classList.toggle('hidden', !['העלאה', 'החלפה'].includes(actionType));
+        console.log(`[handleActionTypeChange] Action type changed to: ${actionType}`); // DEBUG
     }
 
     // הוספת הזמנה חדשה
     async function addOrder() {
+        console.log("[addOrder] Function called."); // DEBUG
         const form = document.getElementById('order-form');
         const formData = new FormData(form);
         const orderData = Object.fromEntries(formData.entries());
         
+        // לוודא שכל שדות החובה מלאים
+        const requiredFields = ['תאריך הזמנה', 'תעודה', 'שם סוכן', 'שם לקוח', 'כתובת', 'סוג פעולה'];
+        for (const field of requiredFields) {
+            if (!orderData[field] || String(orderData[field]).trim() === '') {
+                showAlert(`שדה חובה חסר: ${field}`, 'error');
+                console.error(`[addOrder] Missing required field: ${field}`); // DEBUG
+                return;
+            }
+        }
+
         // וולידציית שימוש במכולה עבור פעולות 'הורדה' או 'החלפה'
         if (['הורדה', 'החלפה'].includes(orderData['סוג פעולה'])) {
             const containerTaken = String(orderData['מספר מכולה ירדה'] || '').trim();
             if (containerTaken && !validateContainerUsage(containerTaken)) {
-                showAlert(`מכולה ${containerTaken} כבר בשימוש בהזמנה פתוחה. אנא ודא שהיא פנויה.`, 'error');
-                return;
+                // שינוי: במקום לחסום לגמרי (return), הצג אזהרה בלבד
+                showAlert(`שימו לב: מכולה ${containerTaken} נראית כבר בשימוש בהזמנה פתוחה אחרת. ודאו שזו הפעולה הרצויה.`, 'warning');
+                console.warn(`[addOrder] Container ${containerTaken} already in use. Continuing with warning.`); // DEBUG
+                // אין return כאן, הפונקציה תמשיך לנסות להוסיף את ההזמנה
             }
         }
 
         orderData['סטטוס'] = 'פתוח'; // הזמנות חדשות הן תמיד פתוחות בהתחלה
         orderData['Kanban Status'] = null; // אתחל את סטטוס הקנבן ל-null בהוספה
 
+        console.log("[addOrder] Attempting to fetch data with:", orderData); // DEBUG: Log data being sent
         const response = await fetchData('add', { data: JSON.stringify(orderData) });
         if (response.success) {
             showAlert(response.message, 'success');
             closeModal('order-modal');
+            console.log("[addOrder] Order added successfully, reloading orders."); // DEBUG
             await loadOrders(); // טען מחדש את ההזמנות כדי לרענן את התצוגה
             
             // בצע שינוי סטטוס להזמנות קודמות של המכולה שהועלתה (אם רלוונטי)
             if (['העלאה', 'החלפה'].includes(orderData['סוג פעולה'])) {
                 const containerBrought = String(orderData['מספר מכולה עלתה'] || '').trim();
                 if (containerBrought) {
+                    console.log(`[addOrder] Closing previous orders for container ${containerBrought}.`); // DEBUG
                     await closePreviousContainerOrders(containerBrought, orderData['תאריך הזמנה']);
                 }
             }
         } else {
             showAlert(response.message || 'שגיאה בהוספת הזמנה', 'error');
+            console.error("[addOrder] Failed to add order:", response.message); // DEBUG
         }
     }
 
     // עריכת הזמנה קיימת
     async function editOrder(sheetRow) {
+        console.log("[editOrder] Function called for sheetRow:", sheetRow); // DEBUG
         const form = document.getElementById('order-form');
         const formData = new FormData(form);
         const updateData = Object.fromEntries(formData.entries());
         
+        // לוודא שכל שדות החובה מלאים
+        const requiredFields = ['תאריך הזמנה', 'תעודה', 'שם סוכן', 'שם לקוח', 'כתובת', 'סוג פעולה'];
+        for (const field of requiredFields) {
+            if (!updateData[field] || String(updateData[field]).trim() === '') {
+                showAlert(`שדה חובה חסר: ${field}`, 'error');
+                console.error(`[editOrder] Missing required field: ${field}`); // DEBUG
+                return;
+            }
+        }
+
         // וולידציית שימוש במכולה עבור פעולות 'הורדה' או 'החלפה'
         if (['הורדה', 'החלפה'].includes(updateData['סוג פעולה'])) {
             const containerTaken = String(updateData['מספר מכולה ירדה'] || '').trim();
             if (containerTaken && !validateContainerUsage(containerTaken, sheetRow)) { // העבר את sheetRow הנוכחי כדי לא לכלול אותו בבדיקה
                 showAlert(`מכולה ${containerTaken} כבר בשימוש בהזמנה פתוחה אחרת. אנא ודא שהיא פנויה.`, 'error');
+                console.warn(`[editOrder] Container ${containerTaken} already in use by another order.`); // DEBUG
                 return;
             }
         }
@@ -1360,32 +1410,37 @@
             delete updateData['Kanban Status'];
         }
         
+        console.log("[editOrder] Attempting to fetch data with:", { id: sheetRow, data: updateData }); // DEBUG: Log data being sent
         const response = await fetchData('edit', { id: sheetRow, data: JSON.stringify(updateData) });
         if (response.success) {
             showAlert(response.message, 'success');
             closeModal('order-modal');
+            console.log("[editOrder] Order updated successfully, reloading orders."); // DEBUG
             await loadOrders(); // טען מחדש את ההזמנות כדי לרענן את התצוגה
 
             // בצע שינוי סטטוס להזמנות קודמות של המכולה שהועלתה (אם רלוונטי)
             if (['העלאה', 'החלפה'].includes(updateData['סוג פעולה'])) {
                 const containerBrought = String(updateData['מספר מכולה עלתה'] || '').trim();
                 if (containerBrought) {
+                    console.log(`[editOrder] Closing previous orders for container ${containerBrought}.`); // DEBUG
                     await closePreviousContainerOrders(containerBrought, updateData['תאריך הזמנה']);
                 }
             }
         } else {
             showAlert(response.message || 'שגיאה בעדכון הזמנה', 'error');
+            console.error("[editOrder] Failed to edit order:", response.message); // DEBUG
         }
     }
 
     // פונקציה לשינוי סטטוס הזמנות קודמות של מכולה שהוחזרה
     async function closePreviousContainerOrders(containerNumber, closeDate) {
+        console.log("[closePreviousContainerOrders] Function called for container:", containerNumber, "closeDate:", closeDate); // DEBUG
         const response = await fetchData('closePreviousContainerOrders', { containerNumber, closeDate });
         if (response.success) {
-            console.log("Previous orders updated successfully for container:", containerNumber);
+            console.log("[closePreviousContainerOrders] Previous orders updated successfully for container:", containerNumber);
             // אין צורך ב-showAlert כאן כדי לא להציף את המשתמש
         } else {
-            console.error("Failed to update previous orders for container:", containerNumber, response.message);
+            console.error("[closePreviousContainerOrders] Failed to update previous orders for container:", containerNumber, response.message);
             // אין צורך ב-showAlert כאן
         }
     }
@@ -1393,11 +1448,13 @@
 
     // שכפול הזמנה (פותח מודל "הוסף הזמנה" עם נתונים משוכפלים)
     async function duplicateOrder(sheetRow) {
+        console.log("[duplicateOrder] Duplicating order from sheetRow:", sheetRow); // DEBUG
         openOrderModal('duplicate', sheetRow);
     }
 
     // פתיחת מודל אישור מחיקה
     function openDeleteConfirmModal(sheetRow, orderId) {
+        console.log("[openDeleteConfirmModal] Opening for sheetRow:", sheetRow, "orderId:", orderId); // DEBUG
         document.getElementById('delete-order-id').textContent = orderId;
         document.getElementById('confirm-delete-btn').onclick = () => deleteOrder(sheetRow);
         openModal('delete-confirm-modal');
@@ -1405,13 +1462,16 @@
 
     // מחיקת הזמנה
     async function deleteOrder(sheetRow) {
+        console.log("[deleteOrder] Function called for sheetRow:", sheetRow); // DEBUG
         const response = await fetchData('delete', { id: sheetRow });
         if (response.success) {
             showAlert(response.message, 'success');
             closeModal('delete-confirm-modal');
+            console.log("[deleteOrder] Order deleted successfully, reloading orders."); // DEBUG
             loadOrders();
         } else {
             showAlert(response.message || 'שגיאה במחיקת הזמנה', 'error');
+            console.error("[deleteOrder] Failed to delete order:", response.message); // DEBUG
         }
     }
     
@@ -1438,13 +1498,17 @@
         if (latestOrder && !currentEditingOrder) {
             autoFillData = latestOrder;
             document.getElementById('autofill-customer-name-display').textContent = `הלקוח ${latestOrder['שם לקוח']} זוהה!`;
-            document.getElementById('autofill-message').innerHTML = `הלקוח **${latestOrder['שם לקוח']}** זוהה מהזמנה קודמת מתאריך **${formatDate(latestOrder['תאריך הזמנה'])}**. האם ברצונך למלא את פרטיו אוטומטית?`;
+            document.getElementById('autofill-message').innerHTML = `הלקוח <b>${latestOrder['שם לקוח']}</b> זוהה מהזמנה קודמת מתאריך <b>${formatDate(latestOrder['תאריך הזמנה'])}</b>. האם ברצונך למלא את פרטיו אוטומטית?`;
             openModal('autofill-confirm-modal');
+            console.log("[checkCustomerExistenceAndAutofill] Customer found, opening autofill modal."); // DEBUG
+        } else {
+            console.log("[checkCustomerExistenceAndAutofill] No matching customer found or currently editing."); // DEBUG
         }
     }
 
     // אישור/ביטול השלמה אוטומטית
     function confirmAutofill(confirm) {
+        console.log("[confirmAutofill] Confirmation received:", confirm); // DEBUG
         if (confirm && autoFillData) {
             Object.keys(autoFillData).forEach(key => {
                 const input = document.getElementById(key);
@@ -1460,6 +1524,7 @@
             document.getElementById('תאריך הזמנה').valueAsDate = new Date(); // תאריך חדש
             document.getElementById('תעודה').value = ''; // נקה מספר תעודה
             handleActionTypeChange(); // עדכן שדות מכולה
+            console.log("[confirmAutofill] Autofill applied."); // DEBUG
         }
         closeModal('autofill-confirm-modal');
         autoFillData = null;
@@ -1467,9 +1532,11 @@
 
     // הצגת פרטי הזמנה במודל
     function showOrderDetailsModal(sheetRow) {
+        console.log("[showOrderDetailsModal] Displaying details for sheetRow:", sheetRow); // DEBUG
         const order = allOrders.find(o => o.sheetRow === sheetRow);
         if (!order) {
             showAlert('פרטי הזמנה לא נמצאו.', 'error');
+            console.error("[showOrderDetailsModal] Order not found for sheetRow:", sheetRow); // DEBUG
             return;
         }
 
@@ -1501,6 +1568,7 @@
     // עריכת הזמנה ממודל הפרטים
     function editOrderFromDetails() {
         const sheetRow = document.querySelector('#order-details-modal .flex.justify-end.gap-3').dataset.sheetRow;
+        console.log("[editOrderFromDetails] Editing order from details for sheetRow:", sheetRow); // DEBUG
         closeModal('order-details-modal');
         openOrderModal('edit', parseInt(sheetRow));
     }
@@ -1509,6 +1577,7 @@
     function deleteOrderFromDetails() {
         const sheetRow = document.querySelector('#order-details-modal .flex.justify-end.gap-3').dataset.sheetRow;
         const order = allOrders.find(o => o.sheetRow === parseInt(sheetRow));
+        console.log("[deleteOrderFromDetails] Deleting order from details for sheetRow:", sheetRow); // DEBUG
         closeModal('order-details-modal');
         if (order) {
             openDeleteConfirmModal(parseInt(sheetRow), order['תעודה']);
@@ -1518,12 +1587,14 @@
     // שכפול הזמנה ממודל הפרטים
     function duplicateOrderFromDetails() {
         const sheetRow = document.querySelector('#order-details-modal .flex.justify-end.gap-3').dataset.sheetRow;
+        console.log("[duplicateOrderFromDetails] Duplicating order from details for sheetRow:", sheetRow); // DEBUG
         closeModal('order-details-modal');
         openOrderModal('duplicate', parseInt(sheetRow));
     }
 
     // הצגת היסטוריית מכולה במודל
     function showContainerHistory(containerNumber) {
+        console.log("[showContainerHistory] Displaying history for container:", containerNumber); // DEBUG
         document.getElementById('history-container-number').textContent = containerNumber;
         const historyTableBody = document.getElementById('container-history-table-body');
         historyTableBody.innerHTML = '';
@@ -1569,6 +1640,7 @@
 
     // הצגת היסטוריית לקוח במודל
     function showCustomerHistory(customerName) {
+        console.log("[showCustomerHistory] Displaying history for customer:", customerName); // DEBUG
         document.getElementById('history-customer-name').textContent = customerName;
         const historyTableBody = document.getElementById('customer-history-table-body');
         historyTableBody.innerHTML = '';
@@ -1604,7 +1676,6 @@
 
     // פתיחת מודל סגירת הזמנה
     function openCloseOrderModal(sheetRow, orderId) {
-        // currentClosingOrderSheetRow = sheetRow; // נסיר שימוש במשתנה גלובלי
         const confirmBtn = document.getElementById('confirm-close-order-btn');
         confirmBtn.dataset.sheetRow = sheetRow; // שמור את sheetRow על הכפתור באמצעות data attribute
         
@@ -1614,27 +1685,30 @@
         confirmBtn.onclick = async () => {
             const notes = document.getElementById('close-order-notes').value;
             const sheetRowToClose = parseInt(confirmBtn.dataset.sheetRow); // קבל את sheetRow מה-data attribute
-            console.log('closeOrderConfirmation called from modal button. sheetRowToClose:', sheetRowToClose, 'notes:', notes); // DEBUG
+            console.log('[openCloseOrderModal] closeOrderConfirmation called from modal button. sheetRowToClose:', sheetRowToClose, 'notes:', notes); // DEBUG
             if (isNaN(sheetRowToClose)) {
                 showAlert('שגיאה: מספר הזמנה לא חוקי. אנא רענן ונסה שוב.', 'error');
+                console.error("[openCloseOrderModal] Invalid sheetRowToClose (NaN)."); // DEBUG
                 return;
             }
             await closeOrderConfirmation(sheetRowToClose, notes);
         };
         openModal('close-order-modal');
-        console.log('openCloseOrderModal opened for sheetRow:', sheetRow); // DEBUG
+        console.log('[openCloseOrderModal] opened for sheetRow:', sheetRow); // DEBUG
     }
 
     // אישור וביצוע סגירת הזמנה
     async function closeOrderConfirmation(sheetRow, notes) {
-        console.log('closeOrderConfirmation received sheetRow:', sheetRow, 'notes:', notes); // DEBUG
+        console.log('[closeOrderConfirmation] received sheetRow:', sheetRow, 'notes:', notes); // DEBUG
         const response = await fetchData('close', { sheetRow: sheetRow, notes: notes });
         if (response.success) {
             showAlert(response.message, 'success');
             closeModal('close-order-modal');
+            console.log("[closeOrderConfirmation] Order closed successfully, reloading orders."); // DEBUG
             loadOrders(); // טען מחדש את ההזמנות כדי לרענן את התצוגה ואת לוח הקנבן
         } else {
             showAlert(response.message || 'שגיאה בסגירת הזמנה', 'error');
+            console.error("[closeOrderConfirmation] Failed to close order:", response.message); // DEBUG
         }
     }
 
@@ -1987,7 +2061,10 @@
         const sheetRow = event.dataTransfer.getData('text/plain');
         const targetColumn = event.currentTarget;
         const currentOrder = allOrders.find(o => o.sheetRow === parseInt(sheetRow));
-        if (!currentOrder) return;
+        if (!currentOrder) {
+            console.error("[drop] Dropped item: Order not found for sheetRow:", sheetRow); // DEBUG
+            return;
+        }
 
         let updateData = {};
         if (targetColumn.id === 'column-overdue') {
@@ -2000,19 +2077,23 @@
             updateData['תאריך סגירה'] = new Date().toISOString().split('T')[0];
             updateData['הערות סיום'] = 'נסגר אוטומטית מלוח הקנבן.'; // הערת סגירה אוטומטית
         }
+        console.log("[drop] Updating order status for sheetRow:", sheetRow, "to:", updateData['Kanban Status'] || 'null'); // DEBUG
 
         const response = await fetchData('edit', { id: sheetRow, data: JSON.stringify(updateData) });
         if (response.success) {
             showAlert('סטטוס הזמנה עודכן בהצלחה!', 'success');
+            console.log("[drop] Order status updated successfully, reloading orders."); // DEBUG
             loadOrders(); // טען מחדש את ההזמנות כדי לרענן את הלוח באופן ויזואלי
         } else {
             showAlert(response.message || 'שגיאה בעדכון סטטוס', 'error');
+            console.error("[drop] Failed to update order status:", response.message); // DEBUG
         }
     }
 
     // רענון נתונים
     function refreshData() {
         showAlert('מרענן נתונים... אנא המתן.', 'info');
+        console.log("[refreshData] Refreshing all data."); // DEBUG
         loadOrders();
     }
 
@@ -2028,6 +2109,7 @@
         if (pageId !== 'treatment-board') {
              // לוודא שהפונקציה closeOrderConfirmation לא מופעלת בטעות
         }
+        console.log(`[showPage] Navigated to: ${pageId}`); // DEBUG
     }
 
     // לוגיקת התראות WhatsApp
@@ -2078,6 +2160,7 @@
             option.textContent = template.name;
             select.appendChild(option);
         });
+        console.log("[populateWhatsAppTemplates] WhatsApp templates populated."); // DEBUG
     }
 
     // טעינת תבנית הודעת WhatsApp נבחרת עם מילוי אוטומטי של נתונים רלוונטיים
@@ -2139,6 +2222,11 @@
                     messageInput.classList.remove('typing-effect'); // הסר אפקט הקלדה בסיום
                 }
             }, 30); // מהירות הקלדה (מילישניות לאות)
+            console.log("[loadWhatsAppTemplate] Template loaded and typing effect started."); // DEBUG
+        } else {
+            messageInput.value = '';
+            messageInput.classList.remove('typing-effect');
+            console.log("[loadWhatsAppTemplate] No template selected, cleared message input."); // DEBUG
         }
     }
 
@@ -2155,6 +2243,7 @@
         document.getElementById('whatsapp-phone-number').value = '';
         document.getElementById('whatsapp-address').value = '';
         document.getElementById('details-order-id').textContent = ''; // נקה ID הזמנה משויך
+        console.log("[clearWhatsAppMessage] WhatsApp message fields cleared."); // DEBUG
     }
 
     // שליחת הודעת WhatsApp (פתיחת וואטסאפ ורישום בלוג)
@@ -2166,10 +2255,12 @@
 
         if (!phoneNumber) {
             showAlert('אנא בחר לקוח עם מספר טלפון או הזן מספר.', 'warning');
+            console.warn("[sendWhatsAppMessage] No phone number provided."); // DEBUG
             return;
         }
         if (!message.trim()) {
             showAlert('ההודעה ריקה. אנא כתוב הודעה או בחר תבנית.', 'warning');
+            console.warn("[sendWhatsAppMessage] Message is empty."); // DEBUG
             return;
         }
 
@@ -2177,6 +2268,7 @@
         window.open(whatsappUrl, '_blank'); // פתח קישור לוואטסאפ בחלון חדש
         
         showAlert('פותח WhatsApp לשליחת הודעה...', 'info');
+        console.log("[sendWhatsAppMessage] Opening WhatsApp for:", phoneNumber); // DEBUG
 
         // רשום את ההודעה לגיליון Google Sheets
         logWhatsAppMessage(orderDocId, message);
@@ -2184,9 +2276,11 @@
 
     // פתיחת עמוד התראות WhatsApp עבור הזמנה ספציפית
     function openWhatsAppAlertsForOrder(sheetRow) {
+        console.log("[openWhatsAppAlertsForOrder] Opening for sheetRow:", sheetRow); // DEBUG
         const order = allOrders.find(o => o.sheetRow === sheetRow);
         if (!order) {
             showAlert('הזמנה לא נמצאה.', 'error');
+            console.error("[openWhatsAppAlertsForOrder] Order not found for sheetRow:", sheetRow); // DEBUG
             return;
         }
         
@@ -2205,6 +2299,7 @@
             document.getElementById('message-template-select').value = ''; // ברירת מחדל
         }
         loadWhatsAppTemplate(); // טען את התבנית שנבחרה (או נבחרה מראש)
+        console.log("[openWhatsAppAlertsForOrder] WhatsApp alerts page opened and fields populated."); // DEBUG
     }
 
     // פונקציות לכלים החדשים
@@ -2255,53 +2350,66 @@
             `;
         });
         resultsDiv.appendChild(table);
+        console.log(`[renderToolResults] Rendered ${orders.length} results for ${targetElementId}.`); // DEBUG
     }
 
     async function searchOrdersByDocIds() {
+        console.log("[searchOrdersByDocIds] Initiating search by document IDs."); // DEBUG
         const input = document.getElementById('tool-doc-ids-input').value;
         const docIds = input.split(',').map(id => id.trim()).filter(Boolean);
         if (docIds.length === 0) {
             showAlert('אנא הזן לפחות מספר תעודה אחד.', 'warning');
+            console.warn("[searchOrdersByDocIds] No document IDs provided."); // DEBUG
             return;
         }
         const response = await fetchData('getOrdersByDocIds', { docIds: JSON.stringify(docIds) });
         if (response.success) {
             renderToolResults('tool-doc-ids-results', response.data);
+            console.log("[searchOrdersByDocIds] Search successful."); // DEBUG
         } else {
             showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי תעודה', 'error');
             renderToolResults('tool-doc-ids-results', []);
+            console.error("[searchOrdersByDocIds] Search failed:", response.message); // DEBUG
         }
     }
 
     async function searchOrdersByCustomerDetails() {
+        console.log("[searchOrdersByCustomerDetails] Initiating search by customer details."); // DEBUG
         const customerName = document.getElementById('tool-customer-name-input').value.trim();
         const address = document.getElementById('tool-customer-address-input').value.trim();
         if (!customerName && !address) {
             showAlert('אנא הזן שם לקוח או כתובת לחיפוש.', 'warning');
+            console.warn("[searchOrdersByCustomerDetails] No customer name or address provided."); // DEBUG
             return;
         }
         const response = await fetchData('getOrdersByCustomerDetails', { customerName, address });
         if (response.success) {
             renderToolResults('tool-customer-details-results', response.data);
+            console.log("[searchOrdersByCustomerDetails] Search successful."); // DEBUG
         } else {
             showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי לקוח וכתובת', 'error');
             renderToolResults('tool-customer-details-results', []);
+            console.error("[searchOrdersByCustomerDetails] Search failed:", response.message); // DEBUG
         }
     }
 
     async function searchOrdersByContainerNumbers() {
+        console.log("[searchOrdersByContainerNumbers] Initiating search by container numbers."); // DEBUG
         const input = document.getElementById('tool-container-numbers-input').value;
         const containerNumbers = input.split(',').map(num => num.trim()).filter(Boolean);
         if (containerNumbers.length === 0) {
             showAlert('אנא הזן לפחות מספר מכולה אחד.', 'warning');
+            console.warn("[searchOrdersByContainerNumbers] No container numbers provided."); // DEBUG
             return;
         }
         const response = await fetchData('getOrdersByContainerNumbers', { containerNumbers: JSON.stringify(containerNumbers) });
         if (response.success) {
             renderToolResults('tool-container-numbers-results', response.data);
+            console.log("[searchOrdersByContainerNumbers] Search successful."); // DEBUG
         } else {
             showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי מכולות', 'error');
             renderToolResults('tool-container-numbers-results', []);
+            console.error("[searchOrdersByContainerNumbers] Search failed:", response.message); // DEBUG
         }
     }
 
@@ -2325,15 +2433,18 @@
             top: 0,
             behavior: "smooth"
         });
+        console.log("[scrollToTop] Scrolled to top."); // DEBUG
     }
 
     // גלילה חלקה לטבלת ההזמנות
     function scrollToOrdersTable() {
         document.getElementById('orders-table').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        console.log("[scrollToOrdersTable] Scrolled to orders table."); // DEBUG
     }
 
     // הרצת פונקציות אתחול בטעינת הדף
     window.onload = () => {
+        console.log("[Window.onload] Initializing application."); // DEBUG
         initializeTheme(); // אתחל מצב תצוגה
         loadOrders(); // טען הזמנות
         populateWhatsAppTemplates(); // אכלס תבניות וואטסאפ
