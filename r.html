@@ -308,6 +308,27 @@
         #loader-overlay > div {
             border-top-color: var(--color-primary);
         }
+
+        /* New CSS for neon blinking effect on Kanban column title */
+        .neon-blinking-border-title {
+            animation: neon-pulse-strong 1.8s infinite alternate;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6), 0 0 20px rgba(255, 0, 0, 0.4);
+            border: 2px solid rgba(255, 0, 0, 0.5); /* Semi-transparent border */
+            border-radius: 1rem; /* Adjust as needed */
+            padding: 1rem; /* Adjust as needed */
+            background-color: rgba(255, 0, 0, 0.05); /* Very light red background */
+        }
+
+        @keyframes neon-pulse-strong {
+            0% {
+                box-shadow: 0 0 5px rgba(255, 0, 0, 0.4), 0 0 15px rgba(255, 0, 0, 0.2);
+                border-color: rgba(255, 0, 0, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 40px rgba(255, 0, 0, 0.6);
+                border-color: rgba(255, 0, 0, 0.8);
+            }
+        }
     </style>
 </head>
 <body class="text-base">
@@ -489,6 +510,9 @@
                 <button id="nav-whatsapp-alerts" class="nav-tab-btn" onclick="showPage('whatsapp-alerts')">
                     <i class="fab fa-whatsapp mr-2"></i>התראות WhatsApp
                 </button>
+                <button id="nav-tools" class="nav-tab-btn" onclick="showPage('tools')">
+                    <i class="fas fa-tools mr-2"></i>כלים
+                </button>
             </nav>
         </div>
 
@@ -656,7 +680,7 @@
                 <div id="no-treatment-orders" class="text-center text-xl text-[var(--color-text-muted)] hidden p-8 card">אין הזמנות לטיפול כרגע. כל הכבוד! 🎉</div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div id="column-overdue" ondrop="drop(event)" ondragover="allowDrop(event)" class="p-5 rounded-xl bg-[var(--color-surface)] space-y-4 min-h-[300px] border border-[var(--color-border)] shadow-inner">
-                        <h3 class="font-bold text-xl text-center text-[var(--color-danger)] mb-4 pb-2 border-b border-[var(--color-border)]">חורגות 🚨</h3>
+                        <h3 class="font-bold text-xl text-center text-[var(--color-danger)] mb-4 pb-2 border-b border-[var(--color-border)] neon-blinking-border-title">לקוחות חורגים שצריכים טיפול 🚨</h3>
                     </div>
                     <div id="column-in-progress" ondrop="drop(event)" ondragover="allowDrop(event)" class="p-5 rounded-xl bg-[var(--color-surface)] space-y-4 min-h-[300px] border border-[var(--color-border)] shadow-inner">
                         <h3 class="font-bold text-xl text-center text-[var(--color-info)] mb-4 pb-2 border-b border-[var(--color-border)]">בטיפול ⚙️</h3>
@@ -710,6 +734,41 @@
                     </div>
                 </div>
             </section>
+
+            <!-- כלים (Tools Page) -->
+            <section id="tools-page" class="page-content hidden space-y-10">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold mb-3 text-[var(--color-text-base)]">כלים לבחינת הזמנות 🛠️</h2>
+                    <p class="text-lg text-[var(--color-text-muted)]">כאן תוכל לבצע חיפושים מתקדמים ולקבל מידע מפורט על הזמנות.</p>
+                </div>
+
+                <!-- חיפוש לפי מספרי תעודות -->
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-[var(--color-primary)]">חיפוש לפי מספרי תעודות</h3>
+                    <input type="text" id="tool-doc-ids-input" placeholder="הזן מספרי תעודות מופרדים בפסיקים (לדוגמה: 12345, 67890)" class="w-full p-3 border text-lg">
+                    <button class="btn btn-primary" onclick="searchOrdersByDocIds()">חפש תעודות</button>
+                    <div id="tool-doc-ids-results" class="mt-4 overflow-x-auto"></div>
+                </div>
+
+                <!-- חיפוש לפי שם לקוח וכתובת -->
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-[var(--color-primary)]">חיפוש לפי לקוח וכתובת</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="tool-customer-name-input" placeholder="שם לקוח" class="w-full p-3 border text-lg">
+                        <input type="text" id="tool-customer-address-input" placeholder="כתובת" class="w-full p-3 border text-lg">
+                    </div>
+                    <button class="btn btn-primary" onclick="searchOrdersByCustomerDetails()">חפש לקוח</button>
+                    <div id="tool-customer-details-results" class="mt-4 overflow-x-auto"></div>
+                </div>
+
+                <!-- חיפוש לפי מספרי מכולות -->
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-xl font-bold text-[var(--color-primary)]">חיפוש לפי מספרי מכולות</h3>
+                    <input type="text" id="tool-container-numbers-input" placeholder="הזן מספרי מכולות מופרדים בפסיקים (לדוגמה: 1, 209)" class="w-full p-3 border text-lg">
+                    <button class="btn btn-primary" onclick="searchOrdersByContainerNumbers()">חפש מכולות</button>
+                    <div id="tool-container-numbers-results" class="mt-4 overflow-x-auto"></div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -749,6 +808,7 @@
         const isDarkMode = document.body.classList.toggle('dark');
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); // שמור העדפה ב-localStorage
         document.querySelector('#theme-toggle i').className = isDarkMode ? 'fas fa-moon' : 'fas fa-sun'; // שנה אייקון
+        drawCharts(); // רענן תרשימים כדי להתאים לצבעי המצב החדש
     }
 
     // פונקציה לאתחול מצב התצוגה (כהה/בהיר) בטעינת הדף
@@ -857,6 +917,8 @@
                     order._effectiveStatus = 'פתוח'; // סטטוס ברירת מחדל להזמנות שאינן סגורות ואינן חורגות
                 }
                 order.sheetRow = parseInt(order.sheetRow); // וודא ש-sheetRow הוא מספר
+                // וודא ש-Kanban Status קיים, אחרת אתחל ל-null
+                order['Kanban Status'] = order['Kanban Status'] || null; 
                 return order;
             });
             updateDashboard(); // עדכון לוח המחוונים
@@ -934,13 +996,13 @@
                 }
             };
 
-            // יצירת תגיות למספרי מכולות
+            // יצירת תגיות למספרי מכולות - שינוי אייקון מ-emoji 📦 לאייקון Font Awesome fa-box
             const containersTaken = String(order['מספר מכולה ירדה'] || '').split(',').map(c => c.trim()).filter(Boolean);
             const containersBrought = String(order['מספר מכולה עלתה'] || '').split(',').map(c => c.trim()).filter(Boolean);
             const allContainers = new Set([...containersTaken, ...containersBrought]);
             
             const containerHTML = [...allContainers].filter(Boolean).map(c => 
-                `<span class="container-badge inline-block bg-[var(--color-secondary)] text-[var(--color-text-base)] text-xs font-semibold px-2.5 py-0.5 rounded-full cursor-pointer hover:bg-[var(--color-primary)] hover:text-white transition-colors" onclick="event.stopPropagation(); showContainerHistory('${c.trim()}')">📦 ${c.trim()}</span>`
+                `<span class="container-badge inline-block bg-[var(--color-secondary)] text-[var(--color-text-base)] text-xs font-semibold px-2.5 py-0.5 rounded-full cursor-pointer hover:bg-[var(--color-primary)] hover:text-white transition-colors" onclick="event.stopPropagation(); showContainerHistory('${c.trim()}')"><i class="fas fa-box"></i> ${c.trim()}</span>`
             ).join(' ');
             
             row.innerHTML = `
@@ -1129,7 +1191,7 @@
                 Object.keys(originalOrder).forEach(key => {
                     const input = form.elements[key];
                     // שכפל את רוב השדות, אך נקה שדות ייחודיים להזמנה חדשה
-                    if (input && !['תעודה', 'תאריך סגירה', 'ימים שעברו', 'מספרי מכולות', '_effectiveStatus', '_daysPassedCalculated', 'sheetRow'].includes(key)) {
+                    if (input && !['תעודה', 'תאריך סגירה', 'ימים שעברו', 'מספרי מכולות', '_effectiveStatus', '_daysPassedCalculated', 'sheetRow', 'Kanban Status'].includes(key)) {
                          if (input.type === 'date' && originalOrder[key]) {
                             input.value = new Date(originalOrder[key]).toISOString().split('T')[0];
                         } else {
@@ -1171,12 +1233,21 @@
         }
 
         orderData['סטטוס'] = 'פתוח'; // הזמנות חדשות הן תמיד פתוחות בהתחלה
-        
+        orderData['Kanban Status'] = null; // אתחל את סטטוס הקנבן ל-null בהוספה
+
         const response = await fetchData('add', { data: JSON.stringify(orderData) });
         if (response.success) {
             showAlert(response.message, 'success');
             closeModal('order-modal');
-            loadOrders(); // טען מחדש את ההזמנות כדי לרענן את התצוגה
+            await loadOrders(); // טען מחדש את ההזמנות כדי לרענן את התצוגה
+            
+            // בצע שינוי סטטוס להזמנות קודמות של המכולה שהועלתה (אם רלוונטי)
+            if (['העלאה', 'החלפה'].includes(orderData['סוג פעולה'])) {
+                const containerBrought = String(orderData['מספר מכולה עלתה'] || '').trim();
+                if (containerBrought) {
+                    await closePreviousContainerOrders(containerBrought, orderData['תאריך הזמנה']);
+                }
+            }
         } else {
             showAlert(response.message || 'שגיאה בהוספת הזמנה', 'error');
         }
@@ -1201,16 +1272,50 @@
         if (updateData.hasOwnProperty('סטטוס')) {
             delete updateData['סטטוס'];
         }
+        // אל תאפשר לשנות Kanban Status ישירות מטופס זה
+        if (updateData.hasOwnProperty('Kanban Status')) {
+            delete updateData['Kanban Status'];
+        }
         
         const response = await fetchData('edit', { id: sheetRow, data: JSON.stringify(updateData) });
         if (response.success) {
             showAlert(response.message, 'success');
             closeModal('order-modal');
-            loadOrders();
+            await loadOrders(); // טען מחדש את ההזמנות כדי לרענן את התצוגה
+
+            // בצע שינוי סטטוס להזמנות קודמות של המכולה שהועלתה (אם רלוונטי)
+            if (['העלאה', 'החלפה'].includes(updateData['סוג פעולה'])) {
+                const containerBrought = String(updateData['מספר מכולה עלתה'] || '').trim();
+                if (containerBrought) {
+                    await closePreviousContainerOrders(containerBrought, updateData['תאריך הזמנה']);
+                }
+            }
         } else {
             showAlert(response.message || 'שגיאה בעדכון הזמנה', 'error');
         }
     }
+
+    // פונקציה לשינוי סטטוס הזמנות קודמות של מכולה שהוחזרה
+    async function closePreviousContainerOrders(containerNumber, closeDate) {
+        // TODO: Apps Script Backend Update:
+        // צור פונקציית 'closePreviousContainerOrders' ב-Apps Script.
+        // פונקציה זו תקבל 'containerNumber' ו-'closeDate'.
+        // היא תעבור על כל ההזמנות בגיליון:
+        // 1. תמצא הזמנות שהסטטוס שלהן הוא 'פתוח'.
+        // 2. שהמכולה 'containerNumber' מופיעה בשדה 'מספר מכולה ירדה' שלהן.
+        // 3. ושאין להן 'מספר מכולה עלתה' שכולל את 'containerNumber' (כלומר, המכולה טרם הוחזרה בהקשר של אותה הזמנה).
+        // 4. ושתאריך ההזמנה שלהן קודם ל-closeDate.
+        // עבור הזמנות אלו, עדכן את 'סטטוס' ל-'סגור' ואת 'תאריך סגירה' ל-closeDate.
+        const response = await fetchData('closePreviousContainerOrders', { containerNumber, closeDate });
+        if (response.success) {
+            console.log("Previous orders updated successfully for container:", containerNumber);
+            // אין צורך ב-showAlert כאן כדי לא להציף את המשתמש
+        } else {
+            console.error("Failed to update previous orders for container:", containerNumber, response.message);
+            // אין צורך ב-showAlert כאן
+        }
+    }
+
 
     // שכפול הזמנה (פותח מודל "הוסף הזמנה" עם נתונים משוכפלים)
     async function duplicateOrder(sheetRow) {
@@ -1270,7 +1375,7 @@
             Object.keys(autoFillData).forEach(key => {
                 const input = document.getElementById(key);
                 // מלא את השדות בטופס, אך דלג על שדות ספציפיים
-                if (input && !['תעודה', 'תאריך הזמנה', 'תאריך סגירה', 'ימים שעברו', 'מספרי מכולות', '_effectiveStatus', '_daysPassedCalculated', 'sheetRow'].includes(key)) {
+                if (input && !['תעודה', 'תאריך הזמנה', 'תאריך סגירה', 'ימים שעברו', 'מספרי מכולות', '_effectiveStatus', '_daysPassedCalculated', 'sheetRow', 'Kanban Status'].includes(key)) {
                      if (input.type === 'date' && autoFillData[key]) {
                         input.value = new Date(autoFillData[key]).toISOString().split('T')[0];
                     } else {
@@ -1299,6 +1404,7 @@
         detailsContent.innerHTML = `
             <p><strong>תאריך הזמנה:</strong> ${formatDate(order['תאריך הזמנה'])}</p>
             <p><strong>סטטוס:</strong> <span class="status-${(order._effectiveStatus || '').replace(/[/ ]/g, '-').toLowerCase()}">${order._effectiveStatus || ''}</span></p>
+            <p><strong>סטטוס קנבן:</strong> ${order['Kanban Status'] || 'לא נקבע'}</p>
             <p><strong>לקוח:</strong> ${order['שם לקוח'] || ''}</p>
             <p><strong>כתובת:</strong> ${order['כתובת'] || ''}</p>
             <p><strong>טלפון לקוח:</strong> ${order['טלפון לקוח'] || ''}</p>
@@ -1652,14 +1758,14 @@
             const row = document.createElement('tr');
             row.className = 'border-b border-[var(--color-border)]';
             if (state.status === 'in-use') {
-                row.innerHTML = `<td class="p-3"><span class="cursor-pointer hover:text-[var(--color-primary)]" onclick="showContainerHistory('${num}')">📦 ${num}</span></td><td class="p-3">${state.currentOrder['שם לקוח']}</td><td class="p-3">${formatDate(state.currentOrder['תאריך הזמנה'])}</td>`;
+                row.innerHTML = `<td class="p-3"><span class="cursor-pointer hover:text-[var(--color-primary)]" onclick="showContainerHistory('${num}')"><i class="fas fa-box"></i> ${num}</span></td><td class="p-3">${state.currentOrder['שם לקוח']}</td><td class="p-3">${formatDate(state.currentOrder['תאריך הזמנה'])}</td>`;
                 inUseTableBody.appendChild(row);
             } else { // status === 'available'
                 let estimatedAvailableDate = new Date(state.lastRelevantActivityDate);
                 // אם היא הפכה לזמינה עקב הורדה שנסגרה, או העלאה, היא זמינה מיד מהתאריך הזה
                 // אין צורך להוסיף OVERDUE_THRESHOLD_DAYS עבור זמינות, כי זה כבר משקף פעולה שסיימה את השימוש.
                 
-                row.innerHTML = `<td class="p-3"><span class="cursor-pointer hover:text-[var(--color-primary)]" onclick="showContainerHistory('${num}')">📦 ${num}</span></td><td class="p-3">${formatDate(estimatedAvailableDate)}</td>`;
+                row.innerHTML = `<td class="p-3"><span class="cursor-pointer hover:text-[var(--color-primary)]" onclick="showContainerHistory('${num}')"><i class="fas fa-box"></i> ${num}</span></td><td class="p-3">${formatDate(estimatedAvailableDate)}</td>`;
                 availableTableBody.appendChild(row);
             }
         });
@@ -1676,9 +1782,9 @@
         // נקה את כל הכרטיסים הקיימים בכל עמודה
         Object.values(columns).forEach(col => col.querySelectorAll('.kanban-item').forEach(item => item.remove()));
 
-        // סנן הזמנות לטיפול: הזמנות חורגות (שסטטוסן הוא 'חורג' או שהן 'פתוחות' ועברו את סף החריגה)
-        const ordersForTreatment = allOrders.filter(o => o._effectiveStatus === 'חורג' || (o._effectiveStatus === 'פתוח' && o._daysPassedCalculated >= OVERDUE_THRESHOLD_DAYS));
-        
+        // סנן הזמנות לטיפול:
+        const ordersForTreatment = allOrders.filter(o => o._effectiveStatus !== 'סגור'); // סנן רק הזמנות שאינן סגורות
+
         // הצג/הסתר הודעת "אין הזמנות לטיפול"
         document.getElementById('no-treatment-orders').classList.toggle('hidden', ordersForTreatment.length > 0);
 
@@ -1699,9 +1805,20 @@
                     <button class="action-icon-btn" onclick="event.stopPropagation(); openDeleteConfirmModal(${order.sheetRow}, '${order['תעודה']}')" title="מחק"><i class="fas fa-trash text-[var(--color-danger)]"></i></button>
                 </div>
             `;
-            // קבע את העמודה הנכונה: 'overdue' אם הסטטוס האפקטיבי הוא 'חורג', אחרת 'in-progress'
-            const targetColumn = order._effectiveStatus === 'חורג' ? 'overdue' : 'in-progress';
-            columns[targetColumn].appendChild(item);
+            
+            // קבע את העמודה הנכונה
+            let targetColumnElement;
+            if (order['Kanban Status'] === 'בטיפול') {
+                targetColumnElement = columns['in-progress'];
+            } else if (order['Kanban Status'] === 'טופלו') {
+                targetColumnElement = columns['resolved']; // Note: 'טופלו' items will disappear on refresh if their sheet status is 'סגור'
+            } else if (order._effectiveStatus === 'חורג') {
+                targetColumnElement = columns['overdue'];
+            } else {
+                // אם הזמנה לא חורגת ולא בסטטוס קנבן ספציפי, אל תציג אותה בלוח טיפול
+                return; // דלג על הזמנות שלא צריכות להופיע על הלוח
+            }
+            targetColumnElement.appendChild(item);
         });
     }
     
@@ -1713,24 +1830,30 @@
         event.preventDefault();
         const sheetRow = event.dataTransfer.getData('text/plain');
         const targetColumn = event.currentTarget;
-        const statusMap = {
-            'column-overdue': 'פתוח', // הזמנה שעברה לעמודת "חורגות" עדיין נחשבת "פתוחה" בגיליון. הסטטוס האפקטיבי יקבע ע"י ימים שעברו
-            'column-in-progress': 'פתוח',
-            'column-resolved': 'סגור'
-        };
-        const newSheetStatus = statusMap[targetColumn.id];
-        if (!newSheetStatus) return;
+        const currentOrder = allOrders.find(o => o.sheetRow === parseInt(sheetRow));
+        if (!currentOrder) return;
 
-        const updateData = { 'סטטוס': newSheetStatus };
-        // אם סטטוס חדש הוא 'סגור', עדכן גם את תאריך הסגירה
-        if (newSheetStatus === 'סגור') {
+        let updateData = {};
+        if (targetColumn.id === 'column-overdue') {
+            updateData['Kanban Status'] = null; // חזרה לסטטוס רגיל בלוח
+            // 'סטטוס' בגיליון נשאר 'פתוח' אם הוא כבר היה כזה
+        } else if (targetColumn.id === 'column-in-progress') {
+            updateData['Kanban Status'] = 'בטיפול';
+            // 'סטטוס' בגיליון נשאר 'פתוח'
+        } else if (targetColumn.id === 'column-resolved') {
+            updateData['Kanban Status'] = 'טופלו';
+            updateData['סטטוס'] = 'סגור'; // סגור את ההזמנה בגיליון
             updateData['תאריך סגירה'] = new Date().toISOString().split('T')[0];
         }
-        
+
+        // שלח את העדכון לשרת
+        // TODO: Apps Script Backend Update:
+        // וודא שפונקציית ה-'edit' ב-Apps Script שלך יכולה לקבל ולעדכן את השדה 'Kanban Status'
+        // בנוסף ל-'סטטוס' ו-'תאריך סגירה'. הוסף עמודה חדשה בשם "Kanban Status" לגיליון שלך.
         const response = await fetchData('edit', { id: sheetRow, data: JSON.stringify(updateData) });
         if (response.success) {
             showAlert('סטטוס הזמנה עודכן בהצלחה!', 'success');
-            loadOrders(); // טען מחדש את ההזמנות כדי לרענן את הלוח
+            loadOrders(); // טען מחדש את ההזמנות כדי לרענן את הלוח באופן ויזואלי
         } else {
             showAlert(response.message || 'שגיאה בעדכון סטטוס', 'error');
         }
@@ -1927,6 +2050,113 @@
             document.getElementById('message-template-select').value = ''; // ברירת מחדל
         }
         loadWhatsAppTemplate(); // טען את התבנית שנבחרה (או נבחרה מראש)
+    }
+
+    // פונקציות לכלים החדשים
+    function renderToolResults(targetElementId, orders) {
+        const resultsDiv = document.getElementById(targetElementId);
+        resultsDiv.innerHTML = '';
+        if (orders.length === 0) {
+            resultsDiv.innerHTML = '<p class="text-center text-gray-500 mt-4">לא נמצאו הזמנות תואמות.</p>';
+            return;
+        }
+
+        const table = document.createElement('table');
+        table.className = 'w-full text-right border-collapse table-auto';
+        table.innerHTML = `
+            <thead>
+                <tr class="bg-[var(--color-background)] border-b-2 border-[var(--color-border)]">
+                    <th class="p-3">תאריך</th>
+                    <th class="p-3">תעודה</th>
+                    <th class="p-3">לקוח</th>
+                    <th class="p-3">סוג פעולה</th>
+                    <th class="p-3">מכולות</th>
+                    <th class="p-3">סטטוס</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+
+        orders.forEach(order => {
+            const row = tbody.insertRow();
+            row.className = `border-b border-[var(--color-border)] transition-colors cursor-pointer`;
+            row.onclick = () => showOrderDetailsModal(order.sheetRow);
+
+            const containersTaken = String(order['מספר מכולה ירדה'] || '').split(',').map(c => c.trim()).filter(Boolean);
+            const containersBrought = String(order['מספר מכולה עלתה'] || '').split(',').map(c => c.trim()).filter(Boolean);
+            const allContainers = new Set([...containersTaken, ...containersBrought]);
+            const containerHTML = [...allContainers].filter(Boolean).map(c => 
+                `<span class="container-badge inline-block bg-[var(--color-secondary)] text-[var(--color-text-base)] text-xs font-semibold px-2.5 py-0.5 rounded-full cursor-pointer" onclick="event.stopPropagation(); showContainerHistory('${c.trim()}')"><i class="fas fa-box"></i> ${c.trim()}</span>`
+            ).join(' ');
+
+            row.innerHTML = `
+                <td class="p-3">${formatDate(order['תאריך הזמנה'])}</td>
+                <td class="p-3">${order['תעודה'] || ''}</td>
+                <td class="p-3">${order['שם לקוח'] || ''}</td>
+                <td class="p-3">${order['סוג פעולה'] || ''}</td>
+                <td class="p-3">${containerHTML}</td>
+                <td class="p-3"><span class="status-${(order._effectiveStatus || '').replace(/[/ ]/g, '-').toLowerCase()}">${order._effectiveStatus || ''}</span></td>
+            `;
+        });
+        resultsDiv.appendChild(table);
+    }
+
+    async function searchOrdersByDocIds() {
+        const input = document.getElementById('tool-doc-ids-input').value;
+        const docIds = input.split(',').map(id => id.trim()).filter(Boolean);
+        if (docIds.length === 0) {
+            showAlert('אנא הזן לפחות מספר תעודה אחד.', 'warning');
+            return;
+        }
+        // TODO: Apps Script Backend Update:
+        // צור פונקציית 'getOrdersByDocIds' ב-Apps Script שתקבל רשימת ID's
+        // ותחזיר את ההזמנות התואמות.
+        const response = await fetchData('getOrdersByDocIds', { docIds: JSON.stringify(docIds) });
+        if (response.success) {
+            renderToolResults('tool-doc-ids-results', response.data);
+        } else {
+            showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי תעודה', 'error');
+            renderToolResults('tool-doc-ids-results', []);
+        }
+    }
+
+    async function searchOrdersByCustomerDetails() {
+        const customerName = document.getElementById('tool-customer-name-input').value.trim();
+        const address = document.getElementById('tool-customer-address-input').value.trim();
+        if (!customerName && !address) {
+            showAlert('אנא הזן שם לקוח או כתובת לחיפוש.', 'warning');
+            return;
+        }
+        // TODO: Apps Script Backend Update:
+        // צור פונקציית 'getOrdersByCustomerDetails' ב-Apps Script שתקבל שם לקוח וכתובת
+        // ותחזיר את ההזמנות התואמות.
+        const response = await fetchData('getOrdersByCustomerDetails', { customerName, address });
+        if (response.success) {
+            renderToolResults('tool-customer-details-results', response.data);
+        } else {
+            showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי לקוח וכתובת', 'error');
+            renderToolResults('tool-customer-details-results', []);
+        }
+    }
+
+    async function searchOrdersByContainerNumbers() {
+        const input = document.getElementById('tool-container-numbers-input').value;
+        const containerNumbers = input.split(',').map(num => num.trim()).filter(Boolean);
+        if (containerNumbers.length === 0) {
+            showAlert('אנא הזן לפחות מספר מכולה אחד.', 'warning');
+            return;
+        }
+        // TODO: Apps Script Backend Update:
+        // צור פונקציית 'getOrdersByContainerNumbers' ב-Apps Script שתקבל רשימת מספרי מכולות
+        // ותחזיר את ההזמנות התואמות, הן כאלו שהמכולה ירדה בהן והן כאלו שהיא עלתה בהן.
+        const response = await fetchData('getOrdersByContainerNumbers', { containerNumbers: JSON.stringify(containerNumbers) });
+        if (response.success) {
+            renderToolResults('tool-container-numbers-results', response.data);
+        } else {
+            showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי מכולות', 'error');
+            renderToolResults('tool-container-numbers-results', []);
+        }
     }
 
     // פונקציונליות "גלול למעלה"
