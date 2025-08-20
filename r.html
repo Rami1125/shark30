@@ -919,12 +919,20 @@
         showLoader();
         const urlParams = new URLSearchParams({ action, ...params });
         const url = `${SCRIPT_WEB_APP_URL}?${urlParams.toString()}`;
-        console.log(`[fetchData] Fetching: ${url}`); // DEBUG: Log the URL being fetched
+        console.log(`[fetchData] Request URL: ${url}`); // DEBUG: Log the URL being fetched
         try {
             const response = await fetch(url);
             console.log(`[fetchData] Response status: ${response.status}`); // DEBUG: Log response status
             const data = await response.json();
             console.log(`[fetchData] Response data:`, data); // DEBUG: Log full response data
+
+            if (!response.ok) { // Check HTTP status first
+                const errorMessage = data.message || `שגיאת שרת HTTP: ${response.status}`;
+                showAlert(errorMessage, 'error');
+                console.error("[fetchData] HTTP error:", errorMessage, data);
+                return { success: false, message: errorMessage };
+            }
+
             // טיפול בשגיאות "Service invoked too many times" באמצעות exponential backoff
             if (!data.success && data.message && data.message.includes('Service invoked too many times')) {
                 const delay = Math.pow(2, retries) * 1000;
@@ -933,13 +941,19 @@
                     await new Promise(resolve => setTimeout(resolve, delay));
                     return fetchData(action, params, retries + 1);
                 } else {
-                    showAlert('השרת עמוס, אנא נסה שוב מאוחר יותר.', 'error');
+                    showAlert('השרת עמוס מדי, אנא נסה שוב מאוחר יותר.', 'error');
+                    return { success: false, message: 'Service too busy' };
                 }
+            } else if (!data.success) { // Handle other server-side logical errors
+                showAlert(data.message || 'פעולה נכשלה בשרת.', 'error');
+                console.error("[fetchData] Server-side operation failed:", data.message, data);
+                return data; // Return the data object directly as it contains success:false and a message
             }
+
             return data;
         } catch (error) {
-            showAlert('שגיאת תקשורת עם השרת.', 'error');
-            console.error("[fetchData] Fetch error:", error); // DEBUG: Log detailed fetch error
+            showAlert('שגיאת תקשורת: לא ניתן להתחבר לשרת.', 'error');
+            console.error("[fetchData] Network or parsing error:", error); // DEBUG: Log detailed fetch error
             return { success: false, message: error.message };
         } finally {
             hideLoader();
@@ -2123,333 +2137,4 @@
         { name: 'תזכורת - תאריך סיום צפוי', message: 'שלום [שם לקוח], תזכורת: תאריך הסיום הצפוי של המכולה בהזמנה [תעודה] הוא ב-[תאריך סיום צפוי]. אנא צור קשר אם תרצה להאריך או לתאם פינוי. 🔔' },
         { name: 'הודעה כללית', message: 'שלום [שם לקוח], בהמשך להזמנה [תעודה], רציתי לעדכן...' },
         { name: 'הודעה על הגעת מכולה', message: 'שלום [שם לקוח], המכולה בהזמנה [תעודה] הגיעה ליעדה. תודה שבחרת בנו! 🎉' },
-        { name: 'הודעה על איסוף מכולה', message: 'שלום [שם לקוח], המכולה בהזמנה [תעודה] נאספה בהצלחה. נשמח לשרת אותך שוב בעתיד! 👋' },
-        { name: 'שאלות כלליות', message: 'שלום [שם לקוח], אנו עומדים לרשותך לכל שאלה או בקשה לגבי השירות שלנו. ❓' },
-        { name: 'תלונה/בעיה', message: 'שלום [שם לקוח], הבנו שיש לך בעיה עם הזמנה [תעודה]. אנו מצטערים על אי הנוחות ונחזור אליך בהקדם לטפל בעניין. 😔' },
-        { name: 'בקשת חוות דעת', message: 'שלום [שם לקוח], אנו מקווים שנהנית מהשירות שלנו בהזמנה [תעודה]. נשמח אם תוכל/י להשאיר חוות דעת קצרה. ⭐' },
-        { name: 'הצעת שירותים נוספים', message: 'שלום [שם לקוח], ראינו שאתה לקוח פעיל. אולי יעניין אותך ללמוד על השירותים החדשים שלנו? ✨' },
-        { name: 'עדכון זמינות', message: 'שלום [שם לקוח], רצינו לעדכן לגבי זמינות המכולות. כרגע יש לנו... ℹ️' },
-        { name: 'אישור הזמנה', message: 'שלום [שם לקוח], הזמנתך מספר [תעודה] אושרה בהצלחה! תאריך אספקה צפוי: [תאריך סיום צפוי]. ✅' },
-        { name: 'הודעה על עיכוב', message: 'שלום [שם לקוח], אנו מתנצלים על עיכוב קל באספקת המכולה להזמנה [תעודה]. אנו צופים שתגיע ב-[תאריך חדש]. ⏳' },
-        { name: 'תודה על תשלום', message: 'שלום [שם לקוח], קיבלנו את התשלום עבור הזמנה [תעודה]. תודה רבה! 🙏' },
-        { name: 'בקשת תשלום', message: 'שלום [שם לקוח], תזכורת לגבי תשלום עבור הזמנה [תעודה]. אנא בצע את התשלום בהקדם. 💸' },
-        { name: 'פנוי במקום', message: 'שלום [שם לקוח], לגבי הזמנה [תעודה], נאשר כי בוצע פינוי מכולה באתר. אנו מעריכים את שיתוף הפעולה. 👍' },
-        { name: 'אישור קבלת מסמכים', message: 'שלום [שם לקוח], אישור קבלת המסמכים הדרושים עבור הזמנה [תעודה]. תודה על שיתוף הפעולה. 📄' },
-        { name: 'עדכון שעות פעילות', message: 'שלום [שם לקוח], לתשומת ליבך, שעות הפעילות שלנו עודכנו. פרטים באתר: [קישור לאתר]. ⏰' },
-        { name: 'הודעה על שירות חדש', message: 'שלום [שם לקוח], אנו שמחים להודיע על שירות חדש שלנו: [שם שירות]. לפרטים נוספים: [קישור]. 🆕' },
-        { name: 'אירוע חברה', message: 'שלום [שם לקוח], אנו מזמינים אותך לאירוע חברה מיוחד שיתקיים ב-[תאריך אירוע]. פרטים והרשמה: [קישור]. 🥳' },
-        { name: 'טיפים לתחזוקה', message: 'שלום [שם לקוח], הנה כמה טיפים חשובים לתחזוקה נכונה של המכולה שלך. 💡' },
-        { name: 'שינוי פרטי קשר', message: 'שלום [שם לקוח], אם שינית פרטי קשר, אנא עדכן אותנו כדי שנוכל להמשיך לתת שירות מיטבי. 📞' },
-        { name: 'סקר שביעות רצון', message: 'שלום [שם לקוח], אנו מבקשים את עזרתך במילוי סקר שביעות רצון קצר כדי שנוכל להשתפר. 😊' },
-        { name: 'חג שמח', message: 'חג שמח [שם לקוח]! מכולנו ב-ח. סבן חומרי בניין. 🎊' },
-        { name: 'שנה טובה', message: 'שנה טובה ומבורכת [שם לקוח]! מאחלים לך שנה של הצלחה ושגשוג. 🌟' },
-        { name: 'סוף שנה אזרחית', message: 'שלום [שם לקוח], תודה על שנה נפלאה של שיתוף פעולה. נשמח להמשיך לשרת אותך גם בשנה הבאה! 👋' }
-    ];
-
-    let currentTypingIndex = 0;
-    let currentTypingTemplateMessage = '';
-    let typingInterval = null;
-
-    // אכלוס תבניות הודעות WhatsApp בדרופדאון
-    function populateWhatsAppTemplates() {
-        const select = document.getElementById('message-template-select');
-        select.innerHTML = '<option value="">בחר תבנית...</option>';
-        whatsappTemplates.forEach((template, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = template.name;
-            select.appendChild(option);
-        });
-        console.log("[populateWhatsAppTemplates] WhatsApp templates populated."); // DEBUG
-    }
-
-    // טעינת תבנית הודעת WhatsApp נבחרת עם מילוי אוטומטי של נתונים רלוונטיים
-    function loadWhatsAppTemplate() {
-        const select = document.getElementById('message-template-select');
-        const messageInput = document.getElementById('whatsapp-message-input');
-        const selectedIndex = select.value;
-
-        // נקה טיימר קודם אם קיים
-        if (typingInterval) {
-            clearInterval(typingInterval);
-            typingInterval = null;
-        }
-        messageInput.value = ''; // נקה את תיבת הטקסט מיד לפני אפקט ההקלדה
-
-        if (selectedIndex !== "") {
-            const template = whatsappTemplates[parseInt(selectedIndex)];
-            let message = template.message;
-            
-            // נסה למלא placeholder-ים בהתבסס על הלקוח/הזמנה שנבחרו (אם זמינים)
-            const customerName = document.getElementById('whatsapp-customer-name').value;
-            const phoneNumber = document.getElementById('whatsapp-phone-number').value; 
-            const address = document.getElementById('whatsapp-address').value;
-            const orderId = document.getElementById('details-order-id').textContent; // מגיע ממודל פרטי הזמנה או לוח קנבן
-            
-            message = message.replace('[שם לקוח]', customerName || 'הלקוח');
-            message = message.replace('[תעודה]', orderId || 'לא ידוע');
-            message = message.replace('[טלפון עסק]', '050-1234567'); // מספר טלפון קבוע לעסק
-            message = message.replace('[כתובת]', address || '');
-            
-            const selectedOrder = allOrders.find(o => o['תעודה'] === orderId);
-            if (selectedOrder) {
-                if (selectedOrder._effectiveStatus === 'חורג' && selectedOrder._daysPassedCalculated) {
-                    message = message.replace('[ימים חורגים]', selectedOrder._daysPassedCalculated);
-                }
-                if (selectedOrder['תאריך סיום צפוי']) {
-                    message = message.replace('[תאריך סיום צפוי]', formatDate(selectedOrder['תאריך סיום צפוי']));
-                }
-                // אם יש placeholder עבור תאריך חדש (למשל, לעיכובים)
-                 if (selectedOrder['תאריך חדש']) { 
-                    message = message.replace('[תאריך חדש]', formatDate(selectedOrder['תאריך חדש']));
-                }
-            }
-
-            // הסר כל placeholder שנותר ולא מולא
-            message = message.replace(/\[.*?\]/g, ''); 
-
-            currentTypingTemplateMessage = message;
-            currentTypingIndex = 0;
-            messageInput.classList.add('typing-effect'); // הפעל אפקט הקלדה
-            typingInterval = setInterval(() => {
-                if (currentTypingIndex < currentTypingTemplateMessage.length) {
-                    messageInput.value += currentTypingTemplateMessage.charAt(currentTypingIndex);
-                    currentTypingIndex++;
-                    messageInput.scrollTop = messageInput.scrollHeight; // גלול לתחתית תיבת הטקסט
-                } else {
-                    clearInterval(typingInterval);
-                    typingInterval = null;
-                    messageInput.classList.remove('typing-effect'); // הסר אפקט הקלדה בסיום
-                }
-            }, 30); // מהירות הקלדה (מילישניות לאות)
-            console.log("[loadWhatsAppTemplate] Template loaded and typing effect started."); // DEBUG
-        } else {
-            messageInput.value = '';
-            messageInput.classList.remove('typing-effect');
-            console.log("[loadWhatsAppTemplate] No template selected, cleared message input."); // DEBUG
-        }
-    }
-
-    // ניקוי שדות הודעת WhatsApp
-    function clearWhatsAppMessage() {
-        if (typingInterval) {
-            clearInterval(typingInterval);
-            typingInterval = null;
-        }
-        document.getElementById('whatsapp-message-input').value = '';
-        document.getElementById('whatsapp-message-input').classList.remove('typing-effect');
-        document.getElementById('message-template-select').value = '';
-        document.getElementById('whatsapp-customer-name').value = '';
-        document.getElementById('whatsapp-phone-number').value = '';
-        document.getElementById('whatsapp-address').value = '';
-        document.getElementById('details-order-id').textContent = ''; // נקה ID הזמנה משויך
-        console.log("[clearWhatsAppMessage] WhatsApp message fields cleared."); // DEBUG
-    }
-
-    // שליחת הודעת WhatsApp (פתיחת וואטסאפ ורישום בלוג)
-    function sendWhatsAppMessage() {
-        const customerName = document.getElementById('whatsapp-customer-name').value;
-        const phoneNumber = document.getElementById('whatsapp-phone-number').value;
-        const message = document.getElementById('whatsapp-message-input').value;
-        const orderDocId = document.getElementById('details-order-id').textContent; // קבל ID מסמך עבור לוגינג
-
-        if (!phoneNumber) {
-            showAlert('אנא בחר לקוח עם מספר טלפון או הזן מספר.', 'warning');
-            console.warn("[sendWhatsAppMessage] No phone number provided."); // DEBUG
-            return;
-        }
-        if (!message.trim()) {
-            showAlert('ההודעה ריקה. אנא כתוב הודעה או בחר תבנית.', 'warning');
-            console.warn("[sendWhatsAppMessage] Message is empty."); // DEBUG
-            return;
-        }
-
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank'); // פתח קישור לוואטסאפ בחלון חדש
-        
-        showAlert('פותח WhatsApp לשליחת הודעה...', 'info');
-        console.log("[sendWhatsAppMessage] Opening WhatsApp for:", phoneNumber); // DEBUG
-
-        // רשום את ההודעה לגיליון Google Sheets
-        logWhatsAppMessage(orderDocId, message);
-    }
-
-    // פתיחת עמוד התראות WhatsApp עבור הזמנה ספציפית
-    function openWhatsAppAlertsForOrder(sheetRow) {
-        console.log("[openWhatsAppAlertsForOrder] Opening for sheetRow:", sheetRow); // DEBUG
-        const order = allOrders.find(o => o.sheetRow === sheetRow);
-        if (!order) {
-            showAlert('הזמנה לא נמצאה.', 'error');
-            console.error("[openWhatsAppAlertsForOrder] Order not found for sheetRow:", sheetRow); // DEBUG
-            return;
-        }
-        
-        showPage('whatsapp-alerts');
-        document.getElementById('whatsapp-customer-name').value = order['שם לקוח'] || '';
-        document.getElementById('whatsapp-phone-number').value = order['טלפון לקוח'] || '';
-        document.getElementById('whatsapp-address').value = order['כתובת'] || '';
-        document.getElementById('details-order-id').textContent = order['תעודה'] || ''; // שמור את ה-ID של המסמך עבור לוגינג
-
-        // נסה לבחור תבנית רלוונטית מראש
-        if (order._effectiveStatus === 'חורג') {
-            document.getElementById('message-template-select').value = whatsappTemplates.findIndex(t => t.name.includes('חורגת')).toString();
-        } else if (order._daysPassedCalculated >= (OVERDUE_THRESHOLD_DAYS - 2) && order._effectiveStatus === 'פתוח') { 
-            document.getElementById('message-template-select').value = whatsappTemplates.findIndex(t => t.name.includes('לפני חריגה')).toString();
-        } else {
-            document.getElementById('message-template-select').value = ''; // ברירת מחדל
-        }
-        loadWhatsAppTemplate(); // טען את התבנית שנבחרה (או נבחרה מראש)
-        console.log("[openWhatsAppAlertsForOrder] WhatsApp alerts page opened and fields populated."); // DEBUG
-    }
-
-    // פונקציות לכלים החדשים
-    function renderToolResults(targetElementId, orders) {
-        const resultsDiv = document.getElementById(targetElementId);
-        resultsDiv.innerHTML = '';
-        if (orders.length === 0) {
-            resultsDiv.innerHTML = '<p class="text-center text-gray-500 mt-4">לא נמצאו הזמנות תואמות.</p>';
-            return;
-        }
-
-        const table = document.createElement('table');
-        table.className = 'w-full text-right border-collapse table-auto';
-        table.innerHTML = `
-            <thead>
-                <tr class="bg-[var(--color-background)] border-b-2 border-[var(--color-border)]">
-                    <th class="p-3">תאריך</th>
-                    <th class="p-3">תעודה</th>
-                    <th class="p-3">לקוח</th>
-                    <th class="p-3">סוג פעולה</th>
-                    <th class="p-3">מכולות</th>
-                    <th class="p-3">סטטוס</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        `;
-        const tbody = table.querySelector('tbody');
-
-        orders.forEach(order => {
-            const row = tbody.insertRow();
-            row.className = `border-b border-[var(--color-border)] transition-colors cursor-pointer`;
-            row.onclick = () => showOrderDetailsModal(order.sheetRow);
-
-            const containersTaken = String(order['מספר מכולה ירדה'] || '').split(',').map(c => c.trim()).filter(Boolean);
-            const containersBrought = String(order['מספר מכולה עלתה'] || '').split(',').map(c => c.trim()).filter(Boolean);
-            const allContainers = new Set([...containersTaken, ...containersBrought]);
-            const containerHTML = [...allContainers].filter(Boolean).map(c => 
-                `<span class="container-badge inline-block bg-[var(--color-secondary)] text-[var(--color-text-base)] text-xs font-semibold px-2.5 py-0.5 rounded-full cursor-pointer" onclick="event.stopPropagation(); showContainerHistory('${c.trim()}')"><i class="fas fa-box"></i> ${c.trim()}</span>`
-            ).join(' ');
-
-            row.innerHTML = `
-                <td class="p-3">${formatDate(order['תאריך הזמנה'])}</td>
-                <td class="p-3">${order['תעודה'] || ''}</td>
-                <td class="p-3">${order['שם לקוח'] || ''}</td>
-                <td class="p-3">${order['סוג פעולה'] || ''}</td>
-                <td class="p-3">${containerHTML}</td>
-                <td class="p-3"><span class="status-${(order._effectiveStatus || '').replace(/[/ ]/g, '-').toLowerCase()}">${order._effectiveStatus || ''}</span></td>
-            `;
-        });
-        resultsDiv.appendChild(table);
-        console.log(`[renderToolResults] Rendered ${orders.length} results for ${targetElementId}.`); // DEBUG
-    }
-
-    async function searchOrdersByDocIds() {
-        console.log("[searchOrdersByDocIds] Initiating search by document IDs."); // DEBUG
-        const input = document.getElementById('tool-doc-ids-input').value;
-        const docIds = input.split(',').map(id => id.trim()).filter(Boolean);
-        if (docIds.length === 0) {
-            showAlert('אנא הזן לפחות מספר תעודה אחד.', 'warning');
-            console.warn("[searchOrdersByDocIds] No document IDs provided."); // DEBUG
-            return;
-        }
-        const response = await fetchData('getOrdersByDocIds', { docIds: JSON.stringify(docIds) });
-        if (response.success) {
-            renderToolResults('tool-doc-ids-results', response.data);
-            console.log("[searchOrdersByDocIds] Search successful."); // DEBUG
-        } else {
-            showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי תעודה', 'error');
-            renderToolResults('tool-doc-ids-results', []);
-            console.error("[searchOrdersByDocIds] Search failed:", response.message); // DEBUG
-        }
-    }
-
-    async function searchOrdersByCustomerDetails() {
-        console.log("[searchOrdersByCustomerDetails] Initiating search by customer details."); // DEBUG
-        const customerName = document.getElementById('tool-customer-name-input').value.trim();
-        const address = document.getElementById('tool-customer-address-input').value.trim();
-        if (!customerName && !address) {
-            showAlert('אנא הזן שם לקוח או כתובת לחיפוש.', 'warning');
-            console.warn("[searchOrdersByCustomerDetails] No customer name or address provided."); // DEBUG
-            return;
-        }
-        const response = await fetchData('getOrdersByCustomerDetails', { customerName, address });
-        if (response.success) {
-            renderToolResults('tool-customer-details-results', response.data);
-            console.log("[searchOrdersByCustomerDetails] Search successful."); // DEBUG
-        } else {
-            showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי לקוח וכתובת', 'error');
-            renderToolResults('tool-customer-details-results', []);
-            console.error("[searchOrdersByCustomerDetails] Search failed:", response.message); // DEBUG
-        }
-    }
-
-    async function searchOrdersByContainerNumbers() {
-        console.log("[searchOrdersByContainerNumbers] Initiating search by container numbers."); // DEBUG
-        const input = document.getElementById('tool-container-numbers-input').value;
-        const containerNumbers = input.split(',').map(num => num.trim()).filter(Boolean);
-        if (containerNumbers.length === 0) {
-            showAlert('אנא הזן לפחות מספר מכולה אחד.', 'warning');
-            console.warn("[searchOrdersByContainerNumbers] No container numbers provided."); // DEBUG
-            return;
-        }
-        const response = await fetchData('getOrdersByContainerNumbers', { containerNumbers: JSON.stringify(containerNumbers) });
-        if (response.success) {
-            renderToolResults('tool-container-numbers-results', response.data);
-            console.log("[searchOrdersByContainerNumbers] Search successful."); // DEBUG
-        } else {
-            showAlert(response.message || 'שגיאה בחיפוש הזמנות לפי מכולות', 'error');
-            renderToolResults('tool-container-numbers-results', []);
-            console.error("[searchOrdersByContainerNumbers] Search failed:", response.message); // DEBUG
-        }
-    }
-
-    // פונקציונליות "גלול למעלה"
-    const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
-
-    // הצג/הסתר כפתור הגלילה למעלה בהתאם למיקום הגלילה
-    window.onscroll = function() {
-        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) { /* סף גלילה גבוה יותר */
-            scrollToTopBtn.style.display = "block";
-            scrollToTopBtn.style.opacity = "1";
-        } else {
-            scrollToTopBtn.style.opacity = "0";
-            setTimeout(() => { scrollToTopBtn.style.display = "none"; }, 300); /* הסתר לאחר מעבר אנימציה */
-        }
-    };
-
-    // גלילה חלקה לראש הדף
-    function scrollToTop() {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
-        console.log("[scrollToTop] Scrolled to top."); // DEBUG
-    }
-
-    // גלילה חלקה לטבלת ההזמנות
-    function scrollToOrdersTable() {
-        document.getElementById('orders-table').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log("[scrollToOrdersTable] Scrolled to orders table."); // DEBUG
-    }
-
-    // הרצת פונקציות אתחול בטעינת הדף
-    window.onload = () => {
-        console.log("[Window.onload] Initializing application."); // DEBUG
-        initializeTheme(); // אתחל מצב תצוגה
-        loadOrders(); // טען הזמנות
-        populateWhatsAppTemplates(); // אכלס תבניות וואטסאפ
-    };
-</script>
-
-</body>
-</html>
+        { name: 'הודעה על איסוף מכולה', message: 'שלום 
