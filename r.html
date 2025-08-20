@@ -1603,20 +1603,31 @@
     }
 
     // פתיחת מודל סגירת הזמנה
-    let currentClosingOrderSheetRow = null; // משתנה לשמירת ה-sheetRow של ההזמנה הנסגרת
     function openCloseOrderModal(sheetRow, orderId) {
-        currentClosingOrderSheetRow = sheetRow;
+        // currentClosingOrderSheetRow = sheetRow; // נסיר שימוש במשתנה גלובלי
+        const confirmBtn = document.getElementById('confirm-close-order-btn');
+        confirmBtn.dataset.sheetRow = sheetRow; // שמור את sheetRow על הכפתור באמצעות data attribute
+        
         document.getElementById('close-order-id-display').textContent = orderId;
         document.getElementById('close-order-notes').value = ''; // נקה הערות קודמות
-        document.getElementById('confirm-close-order-btn').onclick = async () => {
+        
+        confirmBtn.onclick = async () => {
             const notes = document.getElementById('close-order-notes').value;
-            await closeOrderConfirmation(currentClosingOrderSheetRow, notes);
+            const sheetRowToClose = parseInt(confirmBtn.dataset.sheetRow); // קבל את sheetRow מה-data attribute
+            console.log('closeOrderConfirmation called from modal button. sheetRowToClose:', sheetRowToClose, 'notes:', notes); // DEBUG
+            if (isNaN(sheetRowToClose)) {
+                showAlert('שגיאה: מספר הזמנה לא חוקי. אנא רענן ונסה שוב.', 'error');
+                return;
+            }
+            await closeOrderConfirmation(sheetRowToClose, notes);
         };
         openModal('close-order-modal');
+        console.log('openCloseOrderModal opened for sheetRow:', sheetRow); // DEBUG
     }
 
     // אישור וביצוע סגירת הזמנה
     async function closeOrderConfirmation(sheetRow, notes) {
+        console.log('closeOrderConfirmation received sheetRow:', sheetRow, 'notes:', notes); // DEBUG
         const response = await fetchData('close', { sheetRow: sheetRow, notes: notes });
         if (response.success) {
             showAlert(response.message, 'success');
