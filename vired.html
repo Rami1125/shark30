@@ -1,663 +1,849 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>דוח השוואה ויזואלי – ורד (PDF) מול סידור (CRM/HTML)</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  :root{
-    --bg: #0f172a;           /* slate-900 */
-    --card: #111827;         /* gray-900 */
-    --muted: #94a3b8;        /* slate-400 */
-    --text: #e5e7eb;         /* gray-200 */
-    --accent: #22d3ee;       /* cyan-400 */
-    --good: #22c55e;         /* green-500 */
-    --warn: #f59e0b;         /* amber-500 */
-    --bad: #ef4444;          /* red-500 */
-    --chip: #1f2937;         /* gray-800 */
-    --shadow: 0 20px 60px rgba(0,0,0,.35);
-    --glow-primary: 0 0 15px rgba(34, 211, 238, 0.5);
-    --glow-good: 0 0 15px rgba(34, 197, 94, 0.4);
-    --glow-bad: 0 0 15px rgba(239, 68, 68, 0.4);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; padding:32px;
-    background: radial-gradient(1200px 600px at 100% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%), var(--bg);
-    color:var(--text); font-family: "Rubik","Heebo","Segoe UI",Arial,system-ui; line-height:1.5;
-  }
-  h1,h2,h3{margin:0 0 14px}
-  h1{font-weight:800; letter-spacing:.3px; font-size: clamp(20px, 3vw, 32px);}
-  h2{font-weight:700; font-size: clamp(16px, 2.2vw, 22px); color:#f8fafc;}
-  h3{font-weight:600; font-size: clamp(14px, 1.8vw, 18px); color:#f1f5f9;}
-  p{margin:6px 0 0; color:var(--muted)}
-  .container{max-width:1200px; margin-inline:auto; display:grid; gap:24px}
-  .row{display:grid; grid-template-columns: 1.2fr .8fr; gap:24px}
-  .card{
-    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:18px; padding:24px; box-shadow:var(--shadow);
-    backdrop-filter: blur(6px);
-    position: relative;
-    overflow: hidden;
-  }
-  .card::before {
-    content: '';
-    position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
-    z-index: -1;
-    border-radius: 20px;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.01));
-    opacity: 0.7;
-  }
-  .pill{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:6px 12px; border-radius:999px; background:var(--chip);
-    color:#dbeafe; font-weight:600; font-size:12px; border:1px solid rgba(255,255,255,.06)
-  }
-  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
-  table{width:100%; border-collapse:separate; border-spacing:0; font-size:14px; overflow:hidden; border-radius:12px; border:1px solid rgba(255,255,255,.07)}
-  thead th{
-    text-align:right; padding:12px; background:rgba(255,255,255,.05); color:#cbd5e1; position:sticky; top:0;
-    font-weight: 600;
-  }
-  tbody td{padding:12px; border-top:1px dashed rgba(255,255,255,.07); vertical-align:top}
-  .tag{font-weight:700; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;}
-  .ok{color:var(--good)}
-  .bad{color:var(--bad)}
-  .warn{color:var(--warn)}
-  .muted{color:var(--muted)}
-  .kpi{
-    display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:16px; margin-top:12px
-  }
-  .kpi .item{
-    background:var(--chip); border:1px solid rgba(255,255,255,.06); padding:16px; border-radius:14px;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    transition: all 0.3s ease;
-  }
-  .kpi .item:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--glow-primary);
-  }
-  .kpi .num{font-size:24px; font-weight:800; margin-bottom: 4px;}
-  .kpi .lbl{font-size:13px; color:var(--muted); text-align: center;}
-  .compare{
-    display:grid; grid-template-columns:1fr 60px 1fr; gap:16px; align-items:stretch
-  }
-  .vs{
-    display:flex; align-items:center; justify-content:center;
-    font-weight:900; color:#d1d5db; letter-spacing:0.5px; font-size: 20px;
-    background:linear-gradient(0deg, rgba(255,255,255,.06), transparent); border-radius:12px;
-    position: relative;
-  }
-  .vs::before {
-    content: 'VS';
-    position: absolute;
-    font-size: 16px;
-    font-weight: 800;
-    color: rgba(255,255,255,0.7);
-    top: 4px;
-  }
-  .marker{
-    background:linear-gradient(90deg, rgba(255,215,0,.35), rgba(255,215,0,.12));
-    outline:2px dashed rgba(255,215,0,.75);
-    animation: pulse 1.6s infinite;
-    border-radius:8px; padding:2px 6px; font-weight: 600;
-    position: relative;
-  }
-  .marker::after {
-    content: '⚠️';
-    margin-right: 4px;
-  }
-  @keyframes pulse{
-    0%{outline-offset: 2px; box-shadow: 0 0 0 rgba(255,215,0,.2)}
-    50%{outline-offset: 4px; box-shadow: 0 0 12px rgba(255,215,0,.4)}
-    100%{outline-offset: 2px; box-shadow: 0 0 0 rgba(255,215,0,.2)}
-  }
-  .badge{display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.07); font-weight: 600;}
-  .badge.ok{background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); color:#bbf7d0; box-shadow: var(--glow-good);}
-  .badge.bad{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.35); color:#fecaca; box-shadow: var(--glow-bad);}
-  .badge.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35); color:#fde68a;}
-  .subtle{font-size:13px; color:#cbd5e1; line-height: 1.5;}
-  .foot{opacity:.9; font-size:12px; margin-top:12px; line-height: 1.5;}
-  .glow{
-    position:relative;
-  }
-  .glow:before{
-    content:""; position:absolute; inset:-2px; border-radius:18px; z-index:-1;
-    background: radial-gradient(220px 120px at 10% -10%, rgba(34,211,238,.12), transparent),
-                radial-gradient(300px 180px at 90% 120%, rgba(250,204,21,.10), transparent);
-    filter: blur(12px);
-  }
-  .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;}
-  .legend .chip{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.06); background:var(--chip); font-size:12px; display: flex; align-items: center; gap: 6px;}
-  .sep{height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); margin:14px 0 18px}
-  .fade-in{animation:fade .6s ease-out}
-  @keyframes fade{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)}}
-  
-  /* New styles for enhanced visual comparison */
-  .comparison-arrow {
-    position: absolute;
-    font-size: 24px;
-    color: var(--accent);
-    animation: bounce 2s infinite;
-    z-index: 10;
-  }
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-    40% {transform: translateY(-10px);}
-    60% {transform: translateY(-5px);}
-  }
-  .highlight-box {
-    border: 2px solid var(--accent);
-    border-radius: 8px;
-    padding: 16px;
-    margin: 12px 0;
-    background: rgba(34, 211, 238, 0.05);
-    box-shadow: var(--glow-primary);
-  }
-  .advantage-list {
-    list-style: none;
-    padding: 0;
-    margin: 16px 0;
-  }
-  .advantage-list li {
-    padding: 8px 0;
-    padding-right: 30px;
-    position: relative;
-  }
-  .advantage-list li:before {
-    content: "•";
-    position: absolute;
-    right: 0;
-    color: var(--accent);
-    font-size: 20px;
-  }
-  .advantage-list li.good:before {
-    content: "✓";
-    color: var(--good);
-  }
-  .advantage-list li.bad:before {
-    content: "✗";
-    color: var(--bad);
-  }
-  .icon-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .icon-header i {
-    font-size: 24px;
-    color: var(--accent);
-  }
-  .verdict-box {
-    background: linear-gradient(145deg, rgba(34,211,238,0.1), rgba(34,197,94,0.1));
-    border-radius: 12px;
-    padding: 20px;
-    margin: 20px 0;
-    border: 1px solid rgba(34,211,238,0.2);
-    box-shadow: var(--glow-primary);
-  }
-  .pulse-ring {
-    display: block;
-    border-radius: 50%;
-    height: 20px;
-    width: 20px;
-    position: absolute;
-    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-    background-color: var(--accent);
-  }
-  @keyframes pulse-ring {
-    0% { transform: scale(0.8); opacity: 1; }
-    80%, 100% { transform: scale(2); opacity: 0; }
-  }
-  .floating-element {
-    animation: float 6s ease-in-out infinite;
-  }
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-    100% { transform: translateY(0px); }
-  }
-  .shine {
-    position: relative;
-    overflow: hidden;
-  }
-  .shine::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
-    transform: rotate(30deg);
-    animation: shine 3s infinite;
-  }
-  @keyframes shine {
-    0% { transform: translateX(-100%) rotate(30deg); }
-    100% { transform: translateX(100%) rotate(30deg); }
-  }
-  .comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-  }
-  .comparison-table th, .comparison-table td {
-    padding: 12px;
-    text-align: right;
-    border: 1px solid rgba(255,255,255,0.1);
-  }
-  .comparison-table th {
-    background-color: rgba(0,0,0,0.2);
-    font-weight: 600;
-  }
-  .comparison-table tr:nth-child(even) {
-    background-color: rgba(255,255,255,0.03);
-  }
-  .comparison-table .better {
-    background-color: rgba(34, 197, 94, 0.1);
-    border-left: 3px solid var(--good);
-  }
-  .comparison-table .worse {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-left: 3px solid var(--bad);
-  }
-  .comparison-table .equal {
-    background-color: rgba(245, 158, 11, 0.1);
-    border-left: 3px solid var(--warn);
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 900px) {
-    .row { grid-template-columns: 1fr; }
-    .compare { grid-template-columns: 1fr; }
-    .vs { display: none; }
-    .kpi { grid-template-columns: 1fr; }
-  }
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>דוח השוואה ויזואלי – ורד (PDF) מול סידור (CRM/HTML)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --pdf-primary: #e63946;       /* אדום - צבע דומיננטי ל-PDF */
+            --pdf-secondary: #f8ad9d;     /* אדום בהיר */
+            --pdf-bg: rgba(230, 57, 70, 0.08);
+            --pdf-border: rgba(230, 57, 70, 0.3);
+            
+            --crm-primary: #2a9d8f;       /* טורקיז - צבע דומיננטי ל-CRM */
+            --crm-secondary: #8ac6d1;     /* טורקיז בהיר */
+            --crm-bg: rgba(42, 157, 143, 0.08);
+            --crm-border: rgba(42, 157, 143, 0.3);
+            
+            --bg: #0f172a;           /* slate-900 */
+            --card: #111827;         /* gray-900 */
+            --muted: #94a3b8;        /* slate-400 */
+            --text: #e5e7eb;         /* gray-200 */
+            --accent: #22d3ee;       /* cyan-400 */
+            --good: #22c55e;         /* green-500 */
+            --warn: #f59e0b;         /* amber-500 */
+            --bad: #ef4444;          /* red-500 */
+            --chip: #1f2937;         /* gray-800 */
+            --shadow: 0 20px 60px rgba(0,0,0,.35);
+            --glow-primary: 0 0 15px rgba(34, 211, 238, 0.5);
+            --glow-good: 0 0 15px rgba(34, 197, 94, 0.4);
+            --glow-bad: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0; 
+            padding: 32px;
+            background: radial-gradient(1200px 600px at 100% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%), var(--bg);
+            color: var(--text); 
+            font-family: "Rubik", "Heebo", "Segoe UI", Arial, system-ui; 
+            line-height: 1.5;
+        }
+        
+        h1, h2, h3 { margin: 0 0 14px; }
+        h1 { font-weight: 800; letter-spacing: .3px; font-size: clamp(20px, 3vw, 32px); }
+        h2 { font-weight: 700; font-size: clamp(16px, 2.2vw, 22px); color: #f8fafc; }
+        h3 { font-weight: 600; font-size: clamp(14px, 1.8vw, 18px); color: #f1f5f9; }
+        p { margin: 6px 0 0; color: var(--muted); }
+        
+        .container { max-width: 1200px; margin-inline: auto; display: grid; gap: 24px; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)), var(--card);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 18px; 
+            padding: 24px; 
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(6px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card.pdf-themed {
+            border-left: 4px solid var(--pdf-primary);
+            background: linear-gradient(75deg, rgba(230, 57, 70, 0.05), rgba(255,255,255,0.03)), var(--card);
+        }
+        
+        .card.crm-themed {
+            border-left: 4px solid var(--crm-primary);
+            background: linear-gradient(75deg, rgba(42, 157, 143, 0.05), rgba(255,255,255,0.03)), var(--card);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            z-index: -1;
+            border-radius: 20px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.01));
+            opacity: 0.7;
+        }
+        
+        .pdf-header {
+            color: var(--pdf-primary);
+            border-bottom: 2px solid var(--pdf-border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .crm-header {
+            color: var(--crm-primary);
+            border-bottom: 2px solid var(--crm-border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .pdf-badge {
+            background: var(--pdf-bg);
+            color: var(--pdf-secondary);
+            border: 1px solid var(--pdf-border);
+        }
+        
+        .crm-badge {
+            background: var(--crm-bg);
+            color: var(--crm-secondary);
+            border: 1px solid var(--crm-border);
+        }
+        
+        .pdf-table {
+            border: 1px solid var(--pdf-border);
+        }
+        
+        .pdf-table thead th {
+            background: linear-gradient(to bottom, var(--pdf-bg), transparent);
+            color: var(--pdf-secondary);
+        }
+        
+        .crm-table {
+            border: 1px solid var(--crm-border);
+        }
+        
+        .crm-table thead th {
+            background: linear-gradient(to bottom, var(--crm-bg), transparent);
+            color: var(--crm-secondary);
+        }
+        
+        .pill {
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px;
+            padding: 6px 12px; 
+            border-radius: 999px; 
+            background: var(--chip);
+            color: #dbeafe; 
+            font-weight: 600; 
+            font-size: 12px; 
+            border: 1px solid rgba(255,255,255,.06);
+        }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0; 
+            font-size: 14px; 
+            overflow: hidden; 
+            border-radius: 12px;
+        }
+        
+        thead th {
+            text-align: right; 
+            padding: 12px; 
+            color: #cbd5e1; 
+            position: sticky; 
+            top: 0;
+            font-weight: 600;
+        }
+        
+        tbody td { 
+            padding: 12px; 
+            border-top: 1px dashed rgba(255,255,255,.07); 
+            vertical-align: top;
+        }
+        
+        .tag { font-weight: 700; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+        .ok { color: var(--good); }
+        .bad { color: var(--bad); }
+        .warn { color: var(--warn); }
+        .muted { color: var(--muted); }
+        
+        .kpi {
+            display: grid; 
+            grid-template-columns: repeat(3, minmax(0,1fr)); 
+            gap: 16px; 
+            margin-top: 12px;
+        }
+        
+        .kpi .item {
+            background: var(--chip); 
+            border: 1px solid rgba(255,255,255,.06); 
+            padding: 16px; 
+            border-radius: 14px;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .kpi .item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--glow-primary);
+        }
+        
+        .kpi .num { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .kpi .lbl { font-size: 13px; color: var(--muted); text-align: center; }
+        
+        .compare {
+            display: grid; 
+            grid-template-columns: 1fr 60px 1fr; 
+            gap: 16px; 
+            align-items: stretch;
+        }
+        
+        .vs {
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-weight: 900; 
+            color: #d1d5db; 
+            letter-spacing: 0.5px; 
+            font-size: 20px;
+            background: linear-gradient(0deg, rgba(255,255,255,.06), transparent); 
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .vs::before {
+            content: 'VS';
+            position: absolute;
+            font-size: 16px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.7);
+            top: 4px;
+        }
+        
+        .marker {
+            background: linear-gradient(90deg, rgba(255,215,0,.35), rgba(255,215,0,.12));
+            outline: 2px dashed rgba(255,215,0,.75);
+            animation: pulse 1.6s infinite;
+            border-radius: 8px; 
+            padding: 2px 6px; 
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .marker::after {
+            content: '⚠️';
+            margin-right: 4px;
+        }
+        
+        @keyframes pulse {
+            0% { outline-offset: 2px; box-shadow: 0 0 0 rgba(255,215,0,.2); }
+            50% { outline-offset: 4px; box-shadow: 0 0 12px rgba(255,215,0,.4); }
+            100% { outline-offset: 2px; box-shadow: 0 0 0 rgba(255,215,0,.2); }
+        }
+        
+        .badge { 
+            display: inline-block; 
+            padding: 6px 10px; 
+            border-radius: 999px; 
+            font-size: 12px; 
+            border: 1px solid rgba(255,255,255,.07); 
+            font-weight: 600;
+        }
+        
+        .badge.ok { background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.35); color: #bbf7d0; box-shadow: var(--glow-good); }
+        .badge.bad { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.35); color: #fecaca; box-shadow: var(--glow-bad); }
+        .badge.warn { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); color: #fde68a; }
+        
+        .subtle { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+        .foot { opacity: .9; font-size: 12px; margin-top: 12px; line-height: 1.5; }
+        
+        .glow { position: relative; }
+        
+        .glow:before {
+            content: ""; 
+            position: absolute; 
+            inset: -2px; 
+            border-radius: 18px; 
+            z-index: -1;
+            background: radial-gradient(220px 120px at 10% -10%, rgba(34,211,238,.12), transparent),
+                        radial-gradient(300px 180px at 90% 120%, rgba(250,204,21,.10), transparent);
+            filter: blur(12px);
+        }
+        
+        .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        
+        .legend .chip { 
+            padding: 8px 12px; 
+            border-radius: 999px; 
+            border: 1px solid rgba(255,255,255,.06); 
+            background: var(--chip); 
+            font-size: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+        }
+        
+        .sep { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); margin: 14px 0 18px; }
+        
+        .fade-in { animation: fade .6s ease-out; }
+        
+        @keyframes fade { 
+            from { opacity: 0; transform: translateY(8px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        /* New styles for enhanced visual comparison */
+        .comparison-arrow {
+            position: absolute;
+            font-size: 24px;
+            color: var(--accent);
+            animation: bounce 2s infinite;
+            z-index: 10;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .highlight-box {
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            background: rgba(34, 211, 238, 0.05);
+            box-shadow: var(--glow-primary);
+        }
+        
+        .advantage-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+        
+        .advantage-list li {
+            padding: 8px 0;
+            padding-right: 30px;
+            position: relative;
+        }
+        
+        .advantage-list li:before {
+            content: "•";
+            position: absolute;
+            right: 0;
+            color: var(--accent);
+            font-size: 20px;
+        }
+        
+        .advantage-list li.good:before {
+            content: "✓";
+            color: var(--good);
+        }
+        
+        .advantage-list li.bad:before {
+            content: "✗";
+            color: var(--bad);
+        }
+        
+        .icon-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .icon-header i {
+            font-size: 24px;
+            color: var(--accent);
+        }
+        
+        .verdict-box {
+            background: linear-gradient(145deg, rgba(34,211,238,0.1), rgba(34,197,94,0.1));
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(34,211,238,0.2);
+            box-shadow: var(--glow-primary);
+        }
+        
+        .pulse-ring {
+            display: block;
+            border-radius: 50%;
+            height: 20px;
+            width: 20px;
+            position: absolute;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            background-color: var(--accent);
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            80%, 100% { transform: scale(2); opacity: 0; }
+        }
+        
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .shine {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 12px;
+            text-align: right;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .comparison-table th {
+            background-color: rgba(0,0,0,0.2);
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: rgba(255,255,255,0.03);
+        }
+        
+        .comparison-table .better {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid var(--good);
+        }
+        
+        .comparison-table .worse {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--bad);
+        }
+        
+        .comparison-table .equal {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--warn);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .row { grid-template-columns: 1fr; }
+            .compare { grid-template-columns: 1fr; }
+            .vs { display: none; }
+            .kpi { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header class="glow card fade-in shine">
-      <h1>דוח השוואה מתקדם – ורד (PDF) מול סידור (CRM + ממשק)</h1>
-      <p>💡 המחשה ויזואלית משופרת עם מרקר צהוב לאי־התאמות,לא ביקשתי לבצע פגישה הכלי יצרתי בשבילי שיעזור לי לנהל את עצמי ליותר טוב . הצגתי להראל והוא בחר לבקש פגישה . מוצג לך הבל בין הדוח שלך הדוח שלי אפשר לבנות פלטפורמה אוטומטית עם קומקס חינאמית! השאלה קודם תוקפים או קודם מקשיבים!!!. דוגמה מבוססת על הלקוחות: אלנבי על הים ו־מיי דסק בע״מ. 🚀
+    <div class="container">
+        <header class="glow card fade-in shine">
+            <h1>דוח השוואה מתקדם – ורד (PDF) מול סידור (CRM + ממשק)</h1>
+            <p>המחשה ויזואלית משופרת עם מרקר צהוב לאי־התאמות,לא ביקשתי לבצע פגישה הכלי יצרתי בשבילי שיעזור לי לנהל את עצמי ליותר טוב . הצגתי להראל והוא בחר לבקש פגישה . מוצג לך הבל בין הדוח שלך הדוח שלי אפשר לבנות פלטפורמה אוטומטית עם קומקס חינאמית! השאלה קודם תוקפים או קודם מקשיבים!!!. דוגמה מבוססת על הלקוחות: <b>אלנבי על הים</b> ו־<b>מיי דסק בע״מ</b>.</p>
+            <div class="legend">
+                <span class="chip"><div class="pulse-ring"></div> מרקר צהוב = שדה לא תואם / חסר</span>
+                <span class="chip"><i class="fas fa-check-circle ok"></i> מתאים</span>
+                <span class="chip"><i class="fas fa-times-circle bad"></i> לא תואם</span>
+                <span class="chip"><i class="fas fa-exclamation-triangle warn"></i> חורג</span>
+                <span class="chip"><i class="fas fa-arrow-right accent"></i> חץ השוואה</span>
+            </div>
+        </header>
 
-</b>.</p>
-      <div class="legend">
-        <span class="chip"><div class="pulse-ring"></div> מרקר צהוב = שדה לא תואם / חסר</span>
-        <span class="chip"><i class="fas fa-check-circle ok"></i> מתאים</span>
-        <span class="chip"><i class="fas fa-times-circle bad"></i> לא תואם</span>
-        <span class="chip"><i class="fas fa-exclamation-triangle warn"></i> חורג</span>
-        <span class="chip"><i class="fas fa-arrow-right accent"></i> חץ השוואה</span>
-      </div>
-    </header>
+        <!-- KPI Summary -->
+        <section class="card fade-in">
+            <div class="icon-header">
+                <i class="fas fa-chart-line"></i>
+                <h2>מדדי דיוק ומעקב</h2>
+            </div>
+            <div class="kpi">
+                <div class="item">
+                    <div class="num">72%</div>
+                    <div class="lbl">דיוק כללי (התאמות מלאות)</div>
+                </div>
+                <div class="item">
+                    <div class="num">28%</div>
+                    <div class="lbl">פערים/אי־התאמות</div>
+                </div>
+                <div class="item">
+                    <div class="num">100%</div>
+                    <div class="lbl">כיסוי נתונים בממשק</div>
+                </div>
+            </div>
+            <div class="foot">המדדים מחושבים על דגימת ההזמנות שביקשת (מתוך ההשוואה שעשינו).</div>
+        </section>
 
-    <!-- KPI Summary -->
-    <section class="card fade-in">
-      <div class="icon-header">
-        <i class="fas fa-chart-line"></i>
-        <h2>מדדי דיוק ומעקב</h2>
-      </div>
-      <div class="kpi">
-        <div class="item">
-          <div class="num">72%</div>
-          <div class="lbl">דיוק כללי (התאמות מלאות)</div>
-        </div>
-        <div class="item">
-          <div class="num">28%</div>
-          <div class="lbl">פערים/אי־התאמות</div>
-        </div>
-        <div class="item">
-          <div class="num">100%</div>
-          <div class="lbl">כיסוי נתונים בממשק</div>
-        </div>
-      </div>
-      <div class="foot">המדדים מחושבים על דגימת ההזמנות שביקשת (מתוך ההשוואה שעשינו).</div>
-    </section>
+        <!-- CUSTOMER 1: Allenby -->
+        <section class="row fade-in">
+            <div class="card pdf-themed">
+                <div class="pdf-header">
+                    <i class="fas fa-file-pdf"></i>
+                    <h2>אלנבי על הים — ורד (PDF)</h2>
+                </div>
+                <div class="sep"></div>
+                <table class="pdf-table">
+                    <thead>
+                        <tr><th>תאריך</th><th>שם פריט</th><th>ברקוד</th><th>שם לקוח</th><th>סטטוס</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>28/07/2025</td>
+                            <td>מכולת פסולת 8 קוב' <span class="tag pdf-badge">החלפה</span></td>
+                            <td>82001</td>
+                            <td>אלנבי על הים/האגדה</td>
+                            <td class="muted">לא מצוין</td>
+                        </tr>
+                        <tr>
+                            <td>20/08/2025</td>
+                            <td>מכולת פסולת 8 קוב' <span class="tag pdf-badge">הצבה</span></td>
+                            <td>82000</td>
+                            <td>אלנבי על הים/חורגין</td>
+                            <td class="muted marker">אין שדה "חורג" ב־PDF</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="highlight-box">
+                    <h3>חסרונות בולטים:</h3>
+                    <ul class="advantage-list">
+                        <li class="bad">אין סטטוס חורג/פתוח/סגור</li>
+                        <li class="bad">חסר מעקב אחר ימים שעברו</li>
+                        <li class="bad">אין מספרי תעודה מזוהים</li>
+                        <li class="bad">כתובות לא מפורטות במלואן</li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- CUSTOMER 1: Allenby -->
-    <section class="row fade-in">
-      <div class="card">
-        <div class="icon-header">
-          <i class="fas fa-file-pdf bad"></i>
-          <h2>אלנבי על הים — ורד (PDF)</h2>
-        </div>
-        <div class="sep"></div>
-        <table>
-          <thead>
-            <tr><th>תאריך</th><th>שם פריט</th><th>ברקוד</th><th>שם לקוח</th><th>סטטוס</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>28/07/2025</td>
-              <td>מכולת פסולת 8 קוב' <span class="tag">החלפה</span></td>
-              <td>82001</td>
-              <td>אלנבי על הים/האגדה</td>
-              <td class="muted">לא מצוין</td>
-            </tr>
-            <tr class="">
-              <td>20/08/2025</td>
-              <td>מכולת פסולת 8 קוב' <span class="tag">הצבה</span></td>
-              <td>82000</td>
-              <td>אלנבי על הים/חורגין</td>
-              <td class="muted marker">אין שדה "חורג" ב־PDF</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="highlight-box">
-          <h3>חסרונות בולטים:</h3>
-          <ul class="advantage-list">
-            <li class="bad">אין סטטוס חורג/פתוח/סגור</li>
-            <li class="bad">חסר מעקב אחר ימים שעברו</li>
-            <li class="bad">אין מספרי תעודה מזוהים</li>
-            <li class="bad">כתובות לא מפורטות במלואן</li>
-          </ul>
-        </div>
-      </div>
+            <div class="vs">
+                <div class="comparison-arrow" style="top: 40%; left: 50%; transform: translateX(-50%);">
+                    <i class="fas fa-long-arrow-alt-left"></i>
+                </div>
+                <div class="comparison-arrow" style="bottom: 40%; right: 50%; transform: translateX(50%);">
+                    <i class="fas fa-long-arrow-alt-right"></i>
+                </div>
+                VS
+            </div>
 
-      <div class="vs">
-        <div class="comparison-arrow" style="top: 40%; left: 50%; transform: translateX(-50%);">
-          <i class="fas fa-long-arrow-alt-left"></i>
-        </div>
-        <div class="comparison-arrow" style="bottom: 40%; right: 50%; transform: translateX(50%);">
-          <i class="fas fa-long-arrow-alt-right"></i>
-        </div>
-        VS
-      </div>
+            <div class="card crm-themed">
+                <div class="crm-header">
+                    <i class="fas fa-desktop"></i>
+                    <h2>אלנבי על הים — CRM/ממשק</h2>
+                </div>
+                <div class="sep"></div>
+                <table class="crm-table">
+                    <thead>
+                        <tr><th>תאריך הזמנה</th><th>תעודה</th><th>פעולה</th><th>כתובת</th><th>סטטוס</th><th>ימים שעברו</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2025-07-28</td>
+                            <td>6713640</td>
+                            <td>הורדה</td>
+                            <td>אגדה 15 רמת גן</td>
+                            <td><span class="badge ok">סגור</span></td>
+                            <td class="muted">24</td>
+                        </tr>
+                        <tr>
+                            <td>2025-08-21</td>
+                            <td>6714184</td>
+                            <td><span class="marker">החלפה</span></td>
+                            <td>רח׳ חורגין 20, רמת גן</td>
+                            <td><span class="badge warn">חורג</span></td>
+                            <td class="marker">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="highlight-box">
+                    <h3>יתרונות בולטים:</h3>
+                    <ul class="advantage-list">
+                        <li class="good">סטטוסים ברורים (סגור/פתוח/חורג)</li>
+                        <li class="good">מעקב אחר ימים שעברו</li>
+                        <li class="good">מספרי תעודה מזוהים</li>
+                        <li class="good">כתובות מפורטות ומלאות</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-      <div class="card">
-        <div class="icon-header">
-          <i class="fas fa-desktop good"></i>
-          <h2>אלנבי על הים — CRM/ממשק</h2>
-        </div>
-        <div class="sep"></div>
-        <table>
-          <thead>
-            <tr><th>תאריך הזמנה</th><th>תעודה</th><th>פעולה</th><th>כתובת</th><th>סטטוס</th><th>ימים שעברו</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>2025-07-28</td>
-              <td>6713640</td>
-              <td>הורדה</td>
-              <td>אגדה 15 רמת גן</td>
-              <td><span class="badge ok">סגור</span></td>
-              <td class="muted">24</td>
-            </tr>
-            <tr>
-              <td>2025-08-21</td>
-              <td>6714184</td>
-              <td><span class="marker">החלפה</span></td>
-              <td>רח׳ חורגין 20, רמת גן</td>
-              <td><span class="badge warn">חורג</span></td>
-              <td class="marker">0</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="highlight-box">
-          <h3>יתרונות בולטים:</h3>
-          <ul class="advantage-list">
-            <li class="good">סטטוסים ברורים (סגור/פתוח/חורג)</li>
-            <li class="good">מעקב אחר ימים שעברו</li>
-            <li class="good">מספרי תעודה מזוהים</li>
-            <li class="good">כתובות מפורטות ומלאות</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+        <!-- CUSTOMER 2: MyDesk -->
+        <section class="row fade-in">
+            <div class="card pdf-themed">
+                <div class="pdf-header">
+                    <i class="fas fa-file-pdf"></i>
+                    <h2>מיי דסק בע״מ — ורד (PDF)</h2>
+                </div>
+                <div class="sep"></div>
+                <table class="pdf-table">
+                    <thead>
+                        <tr><th>תאריך</th><th>שם פריט</th><th>ברקוד</th><th>שם לקוח</th><th>סטטוס</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>12/08/2025</td>
+                            <td>מכולת פסולת 8 קוב' <span class="tag pdf-badge">החלפה</span></td>
+                            <td>82001</td>
+                            <td>מיי דסק בע״מ</td>
+                            <td class="muted">לא מצוין</td>
+                        </tr>
+                        <tr>
+                            <td class="marker">20/08/2025</td>
+                            <td>מכולת פסולת 8 קוב' <span class="tag pdf-badge">החלפה</span></td>
+                            <td>82001</td>
+                            <td>מיי דסק בע״מ</td>
+                            <td class="muted">לא מצוין</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="highlight-box">
+                    <h3>חסרונות בולטים:</h3>
+                    <ul class="advantage-list">
+                        <li class="bad">חסר מידע על החלפות מכולות</li>
+                        <li class="bad">אין מעקב אחר מספרי מכולות</li>
+                        <li class="bad">תאריכים לא עקביים בפורמט</li>
+                        <li class="bad">אין חיווי על סטטוס פעיל/לא פעיל</li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- CUSTOMER 2: MyDesk -->
-    <section class="row fade-in">
-      <div class="card">
-        <div class="icon-header">
-          <i class="fas fa-file-pdf bad"></i>
-          <h2>מיי דסק בע״מ — ורד (PDF)</h2>
-        </div>
-        <div class="sep"></div>
-        <table>
-          <thead>
-            <tr><th>תאריך</th><th>שם פריט</th><th>ברקוד</th><th>שם לקוח</th><th>סטטוס</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>12/08/2025</td>
-              <td>מכולת פסולת 8 קוב' <span class="tag">החלפה</span></td>
-              <td>82001</td>
-              <td>מיי דסק בע״מ</td>
-              <td class="muted">לא מצוין</td>
-            </tr>
-            <tr>
-              <td class="marker">20/08/2025</td>
-              <td>מכולת פסולת 8 קוב' <span class="tag">החלפה</span></td>
-              <td>82001</td>
-              <td>מיי דסק בע״מ</td>
-              <td class="muted">לא מצוין</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="highlight-box">
-          <h3>חסרונות בולטים:</h3>
-          <ul class="advantage-list">
-            <li class="bad">חסר מידע על החלפות מכולות</li>
-            <li class="bad">אין מעקב אחר מספרי מכולות</li>
-            <li class="bad">תאריכים לא עקביים בפורמט</li>
-            <li class="bad">אין חיווי על סטטוס פעיל/לא פעיל</li>
-          </ul>
-        </div>
-      </div>
+            <div class="vs">
+                <div class="comparison-arrow" style="top: 40%; left: 50%; transform: translateX(-50%);">
+                    <i class="fas fa-long-arrow-alt-left"></i>
+                </div>
+                <div class="comparison-arrow" style="bottom: 40%; right: 50%; transform: translateX(50%);">
+                    <i class="fas fa-long-arrow-alt-right"></i>
+                </div>
+                VS
+            </div>
 
-      <div class="vs">
-        <div class="comparison-arrow" style="top: 40%; left: 50%; transform: translateX(-50%);">
-          <i class="fas fa-long-arrow-alt-left"></i>
-        </div>
-        <div class="comparison-arrow" style="bottom: 40%; right: 50%; transform: translateX(50%);">
-          <i class="fas fa-long-arrow-alt-right"></i>
-        </div>
-        VS
-      </div>
+            <div class="card crm-themed">
+                <div class="crm-header">
+                    <i class="fas fa-desktop"></i>
+                    <h2>מיי דסק בע״מ — CRM/ממשק</h2>
+                </div>
+                <div class="sep"></div>
+                <table class="crm-table">
+                    <thead>
+                        <tr><th>תאריך הזמנה</th><th>תעודה</th><th>פעולה</th><th>כתובת</th><th>סטטוס</th><th>מכולה</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2025-07-22</td>
+                            <td>6713532</td>
+                            <td>החלפה</td>
+                            <td>קיבוץ יקום</td>
+                            <td><span class="badge ok">סגור</span></td>
+                            <td>46 → 213</td>
+                        </tr>
+                        <tr>
+                            <td>2025-08-20</td>
+                            <td>6714165</td>
+                            <td class="marker">החלפה</td>
+                            <td>קיבוץ יקום</td>
+                            <td><span class="badge bad">פתוח</span></td>
+                            <td class="marker">31 → 13 → 46</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="highlight-box">
+                    <h3>יתרונות בולטים:</h3>
+                    <ul class="advantage-list">
+                        <li class="good">מעקב מלא אחר החלפות מכולות</li>
+                        <li class="good">רישום מספרי מכולות מדויק</li>
+                        <li class="good">תאריכים עקביים בפורמט ISO</li>
+                        <li class="good">חיווי ברור על סטטוס פעיל</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-      <div class="card">
-        <div class="icon-header">
-          <i class="fas fa-desktop good"></i>
-          <h2>מיי דסק בע״מ — CRM/ממשק</h2>
-        </div>
-        <div class="sep"></div>
-        <table>
-          <thead>
-            <tr><th>תאריך הזמנה</th><th>תעודה</th><th>פעולה</th><th>כתובת</th><th>סטטוס</th><th>מכולה</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>2025-07-22</td>
-              <td>6713532</td>
-              <td>החלפה</td>
-              <td>קיבוץ יקום</td>
-              <td><span class="badge ok">סגור</span></td>
-              <td>46 → 213</td>
-            </tr>
-            <tr>
-              <td>2025-08-20</td>
-              <td>6714165</td>
-              <td class="marker">החלפה</td>
-              <td>קיבוץ יקום</td>
-              <td><span class="badge bad">פתוח</span></td>
-              <td class="marker">31 → 13 → 46</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="highlight-box">
-          <h3>יתרונות בולטים:</h3>
-          <ul class="advantage-list">
-            <li class="good">מעקב מלא אחר החלפות מכולות</li>
-            <li class="good">רישום מספרי מכולות מדויק</li>
-            <li class="good">תאריכים עקביים בפורמט ISO</li>
-            <li class="good">חיווי ברור על סטטוס פעיל</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+        <!-- Comparison Table -->
+        <section class="card fade-in">
+            <div class="icon-header">
+                <i class="fas fa-balance-scale"></i>
+                <h2>טבלת השוואה מפורטת</h2>
+            </div>
+            <div class="sep"></div>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>מאפיין</th>
+                        <th>ורד (PDF)</th>
+                        <th>CRM/ממשק</th>
+                        <th>יתרון</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>סטטוס הזמנה</td>
+                        <td><i class="fas fa-times bad"></i> לא קיים</td>
+                        <td><i class="fas fa-check good"></i> מלא (פתוח/סגור/חורג)</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>מעקב ימים</td>
+                        <td><i class="fas fa-times bad"></i> לא קיים</td>
+                        <td><i class="fas fa-check good"></i> קיים (חישוב אוטומטי)</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>מספר תעודה</td>
+                        <td><i class="fas fa-times bad"></i> לא קיים</td>
+                        <td><i class="fas fa-check good"></i> מזהה ייחודי</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>כתובת מלאה</td>
+                        <td><i class="fas fa-exclamation-triangle warn"></i> חלקית</td>
+                        <td><i class="fas fa-check good"></i> מלאה ומפורטת</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>היסטוריית מכולות</td>
+                        <td><i class="fas fa-times bad"></i> לא קיים</td>
+                        <td><i class="fas fa-check good"></i> מעקב מלא (מספרי מכולות)</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>תאריכים</td>
+                        <td><i class="fas fa-exclamation-triangle warn"></i> פורמט לא עקבי</td>
+                        <td><i class="fas fa-check good"></i> פורמט ISO עקבי</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>נגישות</td>
+                        <td><i class="fas fa-exclamation-triangle warn"></i> לקריאה בלבד</td>
+                        <td><i class="fas fa-check good"></i> אינטראקטיבי ועדכני</td>
+                        <td class="better">CRM</td>
+                    </tr>
+                    <tr>
+                        <td>תיעוד/ארכיון</td>
+                        <td><i class="fas fa-check good"></i> מצוין לארכיון</td>
+                        <td><i class="fas fa-exclamation-triangle warn"></i> דורש ייצוא</td>
+                        <td class="better">PDF</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
 
-    <!-- Comparison Table -->
-    <section class="card fade-in">
-      <div class="icon-header">
-        <i class="fas fa-balance-scale"></i>
-        <h2>טבלת השוואה מפורטת</h2>
-      </div>
-      <div class="sep"></div>
-      <table class="comparison-table">
-        <thead>
-          <tr>
-            <th>מאפיין</th>
-            <th>ורד (PDF)</th>
-            <th>CRM/ממשק</th>
-            <th>יתרון</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>סטטוס הזמנה</td>
-            <td><i class="fas fa-times bad"></i> לא קיים</td>
-            <td><i class="fas fa-check good"></i> מלא (פתוח/סגור/חורג)</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>מעקב ימים</td>
-            <td><i class="fas fa-times bad"></i> לא קיים</td>
-            <td><i class="fas fa-check good"></i> קיים (חישוב אוטומטי)</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>מספר תעודה</td>
-            <td><i class="fas fa-times bad"></i> לא קיים</td>
-            <td><i class="fas fa-check good"></i> מזהה ייחודי</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>כתובת מלאה</td>
-            <td><i class="fas fa-exclamation-triangle warn"></i> חלקית</td>
-            <td><i class="fas fa-check good"></i> מלאה ומפורטת</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>היסטוריית מכולות</td>
-            <td><i class="fas fa-times bad"></i> לא קיים</td>
-            <td><i class="fas fa-check good"></i> מעקב מלא (מספרי מכולות)</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>תאריכים</td>
-            <td><i class="fas fa-exclamation-triangle warn"></i> פורמט לא עקבי</td>
-            <td><i class="fas fa-check good"></i> פורמט ISO עקבי</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>נגישות</td>
-            <td><i class="fas fa-exclamation-triangle warn"></i> לקריאה בלבד</td>
-            <td><i class="fas fa-check good"></i> אינטראקטיבי ועדכני</td>
-            <td class="better">CRM</td>
-          </tr>
-          <tr>
-            <td>תיעוד/ארכיון</td>
-            <td><i class="fas fa-check good"></i> מצוין לארכיון</td>
-            <td><i class="fas fa-exclamation-triangle warn"></i> דורש ייצוא</td>
-            <td class="better">PDF</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+        <!-- Visual verdict -->
+        <section class="card fade-in">
+            <div class="icon-header">
+                <i class="fas fa-trophy"></i>
+                <h2>מסקנות והמלצות</h2>
+            </div>
+            <div class="sep"></div>
+            <div class="compare">
+                <div class="card pdf-themed">
+                    <h3 style="margin:0 0 12px; color: var(--pdf-primary)">ורד (PDF)</h3>
+                    <p class="subtle">תיעוד נקודתי ללא סטטוס / כתובת / תעודה.</p>
+                    <ul class="advantage-list">
+                        <li class="good">✔ נתונים טכניים (פריט/תאריך/ברקוד)</li>
+                        <li class="bad">✖ אין חיווי חורג</li>
+                        <li class="bad">✖ אין מעקב רב־פעמי</li>
+                        <li class="bad">✖ אין היסטוריית מכולות</li>
+                        <li class="bad">✖ פורמט תאריך לא עקבי</li>
+                    </ul>
+                </div>
+                <div class="vs">
+                    <div class="comparison-arrow" style="top: 40%; left: 50%; transform: translateX(-50%);">
+                        <i class="fas fa-long-arrow-alt-left"></i>
+                    </div>
+                    <div class="comparison-arrow" style="bottom: 40%; right: 50%; transform: translateX(50%);">
+                        <i class="fas fa-long-arrow-alt-right"></i>
+                    </div>
+                    VS
+                </div>
+                <div class="card crm-themed">
+                    <h3 style="margin:0 0 12px; color: var(--crm-primary)">CRM + ממשק</h3>
+                    <p class="subtle">מקור אמת + שליטה בזמן אמת.</p>
+                    <ul class="advantage-list">
+                        <li class="good">✔ סטטוסים (סגור/פתוח/חורג)</li>
+                        <li class="good">✔ קווי זמן והיסטוריה</li>
+                        <li class="good">✔ כתובות, תעודות, טלפונים</li>
+                        <li class="good">✔ מעקב מכולות מלא</li>
+                        <li class="good">✔ פורמט תאריך עקבי (ISO)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="verdict-box">
+                <h3>🚀 הפתרון המומלץ: שילוב המערכות</h3>
+                <p>על בסיס ההשוואה, ממשק ה-CRM עדיף באופן מובהק לניהול שוטף ומעקב אחר מכולות. עם זאת, קובץ ה-PDF מספק תיעוד קבוע לצורכי ארכיון.</p>
+                <p><strong>האסטרטגיה האופטימלית:</strong> שימוש בממשק ה-CRM לניהול יומיומי, עם ייצוא תקופתי ל-PDF לצורכי תיעוד וביקורת.</p>
+            </div>
+            
+            <div class="kpi" style="margin-top:20px">
+                <div class="item">
+                    <div class="num"><i class="fas fa-desktop good"></i> CRM/ממשק</div>
+                    <div class="lbl">מתאים לניהול יומיומי</div>
+                </div>
+                <div class="item">
+                    <div class="num"><i class="fas fa-file-pdf warn"></i> PDF</div>
+                    <div class="lbl">מתאים לתיעוד/ביקורת</div>
+                </div>
+                <div class="item">
+                    <div class="num"><i class="fas fa-sync-alt accent"></i> שילוב</div>
+                    <div class="lbl">איחוד הנתונים מביא 100% כיסוי</div>
+                </div>
+            </div>
+        </section>
 
-    <!-- Visual verdict -->
-    <section class="card fade-in">
-      <div class="icon-header">
-        <i class="fas fa-trophy"></i>
-        <h2>מסקנות והמלצות</h2>
-      </div>
-      <div class="sep"></div>
-      <div class="compare">
-        <div class="card" style="background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.25)">
-          <h3 style="margin:0 0 12px; color: var(--bad)">ורד (PDF)</h3>
-          <p class="subtle">תיעוד נקודתי ללא סטטוס / כתובת / תעודה.</p>
-          <ul class="advantage-list">
-            <li class="good">✔ נתונים טכניים (פריט/תאריך/ברקוד)</li>
-            <li class="bad">✖ אין חיווי חורג</li>
-            <li class="bad">✖ אין מעקב רב־פעמי</li>
-            <li class="bad">✖ אין היסטוריית מכולות</li>
-            <li class="bad">✖ פורמט תאריך לא עקבי</li>
-          </ul>
-        </div>
-        <div class="vs">
-          <div class="comparison-arrow" style="top: 40%; left: 50%; transform: translateX(-50%);">
-            <i class="fas fa-long-arrow-alt-left"></i>
-          </div>
-          <div class="comparison-arrow" style="bottom: 40%; right: 50%; transform: translateX(50%);">
-            <i class="fas fa-long-arrow-alt-right"></i>
-          </div>
-          VS
-        </div>
-        <div class="card" style="background:rgba(34,197,94,.08); border-color:rgba(34,197,94,.25)">
-          <h3 style="margin:0 0 12px; color: var(--good)">CRM + ממשק</h3>
-          <p class="subtle">מקור אמת + שליטה בזמן אמת.</p>
-          <ul class="advantage-list">
-            <li class="good">✔ סטטוסים (סגור/פתוח/חורג)</li>
-            <li class="good">✔ קווי זמן והיסטוריה</li>
-            <li class="good">✔ כתובות, תעודות, טלפונים</li>
-            <li class="good">✔ מעקב מכולות מלא</li>
-            <li class="good">✔ פורמט תאריך עקבי (ISO)</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="verdict-box">
-        <h3>🚀 הפתרון המומלץ: שילוב המערכות</h3>
-        <p>על בסיס ההשוואה, ממשק ה-CRM עדיף באופן מובהק לניהול שוטף ומעקב אחר מכולות. עם זאת, קובץ ה-PDF מספק תיעוד קבוע לצורכי ארכיון.</p>
-        <p><strong>האסטרטגיה האופטימלית:</strong> שימוש בממשק ה-CRM לניהול יומיומי, עם ייצוא תקופתי ל-PDF לצורכי תיעוד וביקורת.</p>
-      </div>
-      
-      <div class="kpi" style="margin-top:20px">
-        <div class="item">
-          <div class="num"><i class="fas fa-desktop good"></i> CRM/ממשק</div>
-          <div class="lbl">מתאים לניהול יומיומי</div>
-        </div>
-        <div class="item">
-          <div class="num"><i class="fas fa-file-pdf warn"></i> PDF</div>
-          <div class="lbl">מתאים לתיעוד/ביקורת</div>
-        </div>
-        <div class="item">
-          <div class="num"><i class="fas fa-sync-alt accent"></i> שילוב</div>
-          <div class="lbl">איחוד הנתונים מביא 100% כיסוי</div>
-        </div>
-      </div>
-    </section>
+        <footer class="subtle" style="text-align:center; margin-top:20px; padding: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+            נבנה כהמחשה ויזואלית מתקדמת עם מרקרים, אנימציות, הבהובים ו-RTL. ניתן להרחיב לטעינת נתונים דינאמיים (CSV/XLSX).
+        </footer>
+    </div>
 
-    <footer class="subtle" style="text-align:center; margin-top:20px; padding: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-      נבנה כהמחשה ויזואלית מתקדמת עם מרקרים, אנימציות, הבהובים ו-RTL. ניתן להרחיב לטעינת נתונים דינאמיים (CSV/XLSX).
-    </footer>
-  </div>
-
-  <script>
-    // Add some interactive effects
-    document.addEventListener('DOMContentLoaded', function() {
-      // Add floating animation to comparison arrows
-      const arrows = document.querySelectorAll('.comparison-arrow');
-      arrows.forEach((arrow, index) => {
-        arrow.style.animationDelay = `${index * 0.5}s`;
-      });
-      
-      // Add hover effects to cards
-      const cards = document.querySelectorAll('.card');
-      cards.forEach(card => {
-        card.addEventListener('mouseenter', () => {
-          card.style.transform = 'translateY(-5px)';
-          card.style.transition = 'transform 0.3s ease';
+    <script>
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add floating animation to comparison arrows
+            const arrows = document.querySelectorAll('.comparison-arrow');
+            arrows.forEach((arrow, index) => {
+                arrow.style.animationDelay = `${index * 0.5}s`;
+            });
+            
+            // Add hover effects to cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-5px)';
+                    card.style.transition = 'transform 0.3s ease';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
         });
-        card.addEventListener('mouseleave', () => {
-          card.style.transform = 'translateY(0)';
-        });
-      });
-    });
-  </script>
+    </script>
 </body>
 </html>
