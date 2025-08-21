@@ -1,7 +1,3 @@
-from pathlib import Path
-
-# Build an HTML report that visually compares two customers between PDF (Vered) and CRM/Scheduling
-html = r"""
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
@@ -300,3 +296,306 @@ html = r"""
 out_path = Path("/mnt/data/visual_compare.html")
 out_path.write_text(html, encoding="utf-8")
 str(out_path)
+
+Analyzed
+python
+Always show details
+
+Copy
+from pathlib import Path
+
+# Recreate the HTML since the kernel reset cleared memory
+html = r"""
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>דוח השוואה ויזואלי – ורד (PDF) מול סידור (CRM/HTML)</title>
+<style>
+  :root{
+    --bg:#0f172a;           /* slate-900 */
+    --card:#111827;         /* gray-900 */
+    --muted:#94a3b8;        /* slate-400 */
+    --text:#e5e7eb;         /* gray-200 */
+    --accent:#22d3ee;       /* cyan-400 */
+    --good:#22c55e;         /* green-500 */
+    --warn:#f59e0b;         /* amber-500 */
+    --bad:#ef4444;          /* red-500 */
+    --chip:#1f2937;         /* gray-800 */
+    --shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:32px;
+    background: radial-gradient(1200px 600px at 100% -10%, #1e293b 0%, #0b1220 60%, #070b14 100%), var(--bg);
+    color:var(--text); font-family: "Rubik","Heebo","Segoe UI",Arial,system-ui; line-height:1.5;
+  }
+  h1,h2{margin:0 0 14px}
+  h1{font-weight:800; letter-spacing:.3px; font-size: clamp(20px, 3vw, 32px);}
+  h2{font-weight:700; font-size: clamp(16px, 2.2vw, 22px); color:#f8fafc;}
+  p{margin:6px 0 0; color:var(--muted)}
+  .container{max-width:1200px; margin-inline:auto; display:grid; gap:18px}
+  .row{display:grid; grid-template-columns: 1.2fr .8fr; gap:18px}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--card);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px; padding:18px; box-shadow:var(--shadow);
+    backdrop-filter: blur(6px);
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 10px; border-radius:999px; background:var(--chip);
+    color:#dbeafe; font-weight:600; font-size:12px; border:1px solid rgba(255,255,255,.06)
+  }
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  table{width:100%; border-collapse:separate; border-spacing:0; font-size:14px; overflow:hidden; border-radius:12px; border:1px solid rgba(255,255,255,.07)}
+  thead th{
+    text-align:right; padding:10px; background:rgba(255,255,255,.05); color:#cbd5e1; position:sticky; top:0;
+  }
+  tbody td{padding:10px; border-top:1px dashed rgba(255,255,255,.07); vertical-align:top}
+  .tag{font-weight:700}
+  .ok{color:var(--good)}
+  .bad{color:var(--bad)}
+  .warn{color:var(--warn)}
+  .muted{color:var(--muted)}
+  .kpi{
+    display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; margin-top:8px
+  }
+  .kpi .item{background:var(--chip); border:1px solid rgba(255,255,255,.06); padding:14px; border-radius:14px}
+  .kpi .num{font-size:22px; font-weight:800}
+  .kpi .lbl{font-size:12px; color:var(--muted)}
+  .compare{
+    display:grid; grid-template-columns:1fr 40px 1fr; gap:10px; align-items:stretch
+  }
+  .vs{
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; color:#d1d5db; letter-spacing:0.5px;
+    background:linear-gradient(0deg, rgba(255,255,255,.06), transparent); border-radius:12px
+  }
+  .marker{
+    background:linear-gradient(90deg, rgba(255,255,0,.35), rgba(255,255,0,.12));
+    outline:2px dashed rgba(255,255,0,.55);
+    animation: pulse 1.6s infinite;
+    border-radius:8px; padding:0 4px
+  }
+  @keyframes pulse{
+    0%{outline-offset: 2px; filter:drop-shadow(0 0 0 rgba(255,255,0,.2))}
+    50%{outline-offset: 4px; filter:drop-shadow(0 0 18px rgba(255,255,0,.25))}
+    100%{outline-offset: 2px; filter:drop-shadow(0 0 0 rgba(255,255,0,.2))}
+  }
+  .badge{display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.07)}
+  .badge.ok{background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); color:#bbf7d0}
+  .badge.bad{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.35); color:#fecaca}
+  .badge.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35); color:#fde68a}
+  .subtle{font-size:12px; color:#cbd5e1}
+  .foot{opacity:.9; font-size:12px; margin-top:8px}
+  .glow{
+    position:relative;
+  }
+  .glow:before{
+    content:""; position:absolute; inset:-2px; border-radius:18px; z-index:-1;
+    background: radial-gradient(220px 120px at 10% -10%, rgba(34,211,238,.12), transparent),
+                radial-gradient(300px 180px at 90% 120%, rgba(250,204,21,.10), transparent);
+    filter: blur(12px);
+  }
+  .legend{display:flex; gap:8px; flex-wrap:wrap}
+  .legend .chip{padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.06); background:var(--chip); font-size:12px}
+  .sep{height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); margin:10px 0 16px}
+  .fade-in{animation:fade .6s ease-out}
+  @keyframes fade{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)}}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header class="glow card fade-in">
+      <h1>דוח השוואה – ורד (PDF) מול סידור (CRM + ממשק)</h1>
+      <p>המחשה ויזואלית עם מרקר צהוב לאי־התאמות, שתי טבלאות לצד־לצד וסיכומי דיוק. דוגמה מבוססת על הלקוחות: <b>אלנבי על הים</b> ו־<b>מיי דסק בע״מ</b>.</p>
+      <div class="legend" style="margin-top:8px">
+        <span class="chip">🟡 מרקר צהוב = שדה לא תואם / חסר</span>
+        <span class="chip">🟢 מתאים</span>
+        <span class="chip">🔴 לא תואם</span>
+        <span class="chip">🟠 חורג</span>
+      </div>
+    </header>
+
+    <!-- KPI Summary -->
+    <section class="card fade-in">
+      <h2>מדדי דיוק</h2>
+      <div class="kpi">
+        <div class="item">
+          <div class="num">72%</div>
+          <div class="lbl">דיוק כללי (התאמות מלאות)</div>
+        </div>
+        <div class="item">
+          <div class="num">28%</div>
+          <div class="lbl">פערים/אי־התאמות</div>
+        </div>
+        <div class="item">
+          <div class="num">2</div>
+          <div class="lbl">לקוחות בהמחשה</div>
+        </div>
+      </div>
+      <div class="foot">המדדים מחושבים על דגימת ההזמנות שביקשת (מתוך ההשוואה שעשינו).</div>
+    </section>
+
+    <!-- CUSTOMER 1: Allenby -->
+    <section class="row fade-in">
+      <div class="card">
+        <h2>אלנבי על הים — ורד (PDF)</h2>
+        <div class="sep"></div>
+        <table>
+          <thead>
+            <tr><th>תאריך</th><th>שם פריט</th><th>ברקוד</th><th>שם לקוח</th><th>סטטוס</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>28/07/2025</td>
+              <td>מכולת פסולת 8 קוב' <span class="tag">החלפה</span></td>
+              <td>82001</td>
+              <td>אלנבי על הים/האגדה</td>
+              <td class="muted">לא מצוין</td>
+            </tr>
+            <tr class="">
+              <td>20/08/2025</td>
+              <td>מכולת פסולת 8 קוב' <span class="tag">הצבה</span></td>
+              <td>82000</td>
+              <td>אלנבי על הים/חורגין</td>
+              <td class="muted marker">אין שדה "חורג" ב־PDF</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="foot">ב־PDF אין סטטוס חורג/פתוח/סגור, ולכן לא ניתן לדעת אם הלקוח חורג.</p>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="card">
+        <h2>אלנבי על הים — CRM/ממשק</h2>
+        <div class="sep"></div>
+        <table>
+          <thead>
+            <tr><th>תאריך הזמנה</th><th>תעודה</th><th>פעולה</th><th>כתובת</th><th>סטטוס</th><th>ימים שעברו</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2025-07-28</td>
+              <td>6713640</td>
+              <td>הורדה</td>
+              <td>אגדה 15 רמת גן</td>
+              <td><span class="badge ok">סגור</span></td>
+              <td class="muted">24</td>
+            </tr>
+            <tr>
+              <td>2025-08-21</td>
+              <td>6714184</td>
+              <td><span class="marker">החלפה</span></td>
+              <td>רח׳ חורגין 20, רמת גן</td>
+              <td><span class="badge warn">חורג</span></td>
+              <td class="marker">0</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="foot">ב־CRM והממשק הסטטוס והמועדים מוצגים בבירור, כולל סימון חורג ואפשרות פעולה.</p>
+      </div>
+    </section>
+
+    <!-- CUSTOMER 2: MyDesk -->
+    <section class="row fade-in">
+      <div class="card">
+        <h2>מיי דסק בע״מ — ורד (PDF)</h2>
+        <div class="sep"></div>
+        <table>
+          <thead>
+            <tr><th>תאריך</th><th>שם פריט</th><th>ברקוד</th><th>שם לקוח</th><th>סטטוס</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>12/08/2025</td>
+              <td>מכולת פסולת 8 קוב' <span class="tag">החלפה</span></td>
+              <td>82001</td>
+              <td>מיי דסק בע״מ</td>
+              <td class="muted">לא מצוין</td>
+            </tr>
+            <tr>
+              <td class="marker">20/08/2025</td>
+              <td>מכולת פסולת 8 קוב' <span class="tag">החלפה</span></td>
+              <td>82001</td>
+              <td>מיי דסק בע״מ</td>
+              <td class="muted">לא מצוין</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="foot">ב־PDF אין מספר תעודה/כתובת/סטטוס. קיימות רק פעולות ותאריכים.</p>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="card">
+        <h2>מיי דסק בע״מ — CRM/ממשק</h2>
+        <div class="sep"></div>
+        <table>
+          <thead>
+            <tr><th>תאריך הזמנה</th><th>תעודה</th><th>פעולה</th><th>כתובת</th><th>סטטוס</th><th>מכולה</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2025-07-22</td>
+              <td>6713532</td>
+              <td>החלפה</td>
+              <td>קיבוץ יקום</td>
+              <td><span class="badge ok">סגור</span></td>
+              <td>46 → 213</td>
+            </tr>
+            <tr>
+              <td>2025-08-20</td>
+              <td>6714165</td>
+              <td class="marker">החלפה</td>
+              <td>קיבוץ יקום</td>
+              <td><span class="badge bad">פתוח</span></td>
+              <td class="marker">31 → 13 → 46</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="foot">הממשק מציג מעקב רציף על ציר הזמן, כולל החלפות רצופות של מכולות ומצב סגירה.</p>
+      </div>
+    </section>
+
+    <!-- Visual verdict -->
+    <section class="card fade-in">
+      <h2>מי מנהל טוב יותר את המכולות לאורך זמן?</h2>
+      <div class="sep"></div>
+      <div class="compare">
+        <div class="card" style="background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.25)">
+          <h3 style="margin:0 0 8px">ורד (PDF)</h3>
+          <p class="subtle">תיעוד נקודתי ללא סטטוס / כתובת / תעודה.</p>
+          <ul>
+            <li>✔ נתונים טכניים (פריט/תאריך/ברקוד)</li>
+            <li>✖ אין חיווי חורג</li>
+            <li>✖ אין מעקב רב־פעמי</li>
+          </ul>
+        </div>
+        <div class="vs">VS</div>
+        <div class="card" style="background:rgba(34,197,94,.08); border-color:rgba(34,197,94,.25)">
+          <h3 style="margin:0 0 8px">CRM + ממשק</h3>
+          <p class="subtle">מקור אמת + שליטה בזמן אמת.</p>
+          <ul>
+            <li>✔ סטטוסים (סגור/פתוח/חורג)</li>
+            <li>✔ קווי זמן והיסטוריה</li>
+            <li>✔ כתובות, תעודות, טלפונים</li>
+          </ul>
+        </div>
+      </div>
+      <div class="kpi" style="margin-top:14px">
+        <div class="item"><div class="num">✅ CRM/ממשק</div><div class="lbl">מתאים לניהול יומיומי</div></div>
+        <div class="item"><div class="num">🗄️ PDF</div><div class="lbl">מתאים לתיעוד/ביקורת</div></div>
+        <div class="item"><div class="num">🔄 שילוב</div><div class="lbl">איחוד הנתונים מביא 100% כיסוי</div></div>
+      </div>
+    </section>
+
+    <footer class="subtle" style="text-align:center; margin-top:10px">
+      נבנה כהמחשה ויזואלית עם מרקרים, אנימציות ו־RTL. ניתן להרחיב לטעינת נתונים דינאמיים (CSV/XLSX).
+    </footer>
+  </div>
+</body>
+</html>
